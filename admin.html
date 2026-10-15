@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Site editor</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:14px/1.5 Inter,system-ui,sans-serif;background:#12141a;color:#eee;display:flex;height:100vh}
+aside{width:380px;flex:none;background:#0d0f13;border-right:1px solid #2a2d36;display:flex;flex-direction:column}
+.top{padding:16px 18px;border-bottom:1px solid #2a2d36}.top h1{font-size:17px;margin:0}.top small{color:#9a9ea8}
+.scroll{flex:1;overflow:auto;padding:10px 18px}
+details{border-bottom:1px solid #22252d;padding:6px 0}summary{cursor:pointer;font-weight:600;padding:10px 0;list-style:none;display:flex;justify-content:space-between}
+summary::after{content:"+";color:#ff2a3d}details[open] summary::after{content:"–"}
+label{display:block;margin:10px 0 4px;font-size:12.5px;color:#9a9ea8}
+input[type=text],textarea{width:100%;padding:9px;border-radius:8px;border:1px solid #2f333d;background:#15171c;color:#eee;font:inherit}
+textarea{min-height:76px;resize:vertical}input[type=color]{width:60px;height:34px;border:0;background:none;padding:0}
+button{font:inherit;cursor:pointer;border:1px solid #2f333d;background:#1a1d24;color:#eee;padding:7px 11px;border-radius:8px}
+button:hover{border-color:#ff2a3d}button.on{border-color:#ff2a3d;background:#2a0f14}
+.item{border:1px solid #2a2d36;border-radius:10px;padding:2px 12px 12px;margin:10px 0;background:#101218}
+.item .bar{display:flex;gap:6px;justify-content:space-between;align-items:center;margin-top:10px}.item b{font-size:12.5px}
+.img{display:flex;gap:8px;align-items:center}.img img{width:38px;height:38px;object-fit:contain;background:#000;border-radius:6px}
+.foot{padding:14px 18px;border-top:1px solid #2a2d36;display:grid;gap:8px}
+.save{background:#ff2a3d;border-color:#ff2a3d;color:#fff;font-weight:600;padding:11px}
+.hint{color:#9a9ea8;font-size:12px}.row{display:flex;gap:8px}.row button{flex:1}
+main{flex:1;display:flex;justify-content:center;padding:14px;overflow:auto}
+iframe{border:0;background:#000;border-radius:12px;width:100%;transition:width .25s}iframe.m{width:390px}
+@media(max-width:860px){body{flex-direction:column}aside{width:100%;height:55vh}main{height:45vh}}
+</style></head><body>
+<aside>
+<div class="top"><h1>Site editor</h1><small>Edit anything on the left. The preview updates live and your work is kept in this browser.</small>
+<div class="row" style="margin-top:10px"><button id="dt" class="on">Desktop</button><button id="mb">Mobile</button></div>
+<div class="row" style="margin-top:8px" id="pg"></div></div>
+<div class="scroll" id="form"></div>
+<div class="foot"><button class="save" id="dl">Download content.js</button>
+<div class="hint">Replace <b>content.js</b> in your site folder with this file, then re-upload. Nothing else changes.</div>
+<button id="reset">Discard my edits</button></div>
+</aside>
+<main><iframe id="f" src="index.html" title="Preview"></iframe></main>
+<script src="content.js"></script>
+<script>
+const KEY='lm-draft',$=id=>document.getElementById(id),f=$('f');
+let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+S=S||JSON.parse(JSON.stringify(window.SITE));
+const SCHEMA=[
+['Logo & name',[['brand.name','text','Site name'],['brand.title','text','Browser tab subtitle'],['brand.logo','image','Logo']]],
+['Home',[['hero.headline','text','Headline'],['hero.accent','text','Words that glow red (from the headline)'],['hero.sub','area','Intro text'],['hero.primary','text','Main button'],['hero.secondary','text','Second button'],['hero.image','image','Background photo (fills the whole top section)'],['hero.video','text','Background video (optional, e.g. video/hero.mp4)']]],
+['Scrolling strip',[['marquee','lines','One phrase per line']]],
+['Projects',[['projects.heading','text','Heading'],['projects.text','area','Intro'],['projects.items','list','Project',[['tag','text','Small label'],['title','text','Title'],['text','area','Description'],['image','image','Cover image'],['link','text','Link (optional)'],['linkLabel','text','Link text']]]]],
+['Galleries',[['galleries.heading','text','Heading'],['galleries.text','area','Intro'],['galleries.items','list','Gallery',[['title','text','Title'],['label','text','Small text'],['url','text','Gallery link'],['image','image','Thumbnail image (optional)']]]]],
+['About me',[['about.heading','text','Heading'],['about.paragraphs','paras','Text (blank line between paragraphs)'],['about.photo','image','Photo'],['about.skills','csv','Skills (separate with commas)']]],
+['Contact & links',[['contact.heading','text','Heading'],['contact.text','area','Intro'],['contact.email','text','Email address'],['contact.types','lines','Project types in the form (one per line)'],['contact.socials','list','Social link',[['label','text','Name'],['url','text','Link']]]]],
+['Colors',[['theme.accent','color','Neon accent'],['theme.bg','color','Background'],['theme.ink','color','Text']]],
+['Footer',[['footer','text','Footer text']]]];
+const parent=(o,p)=>{const k=p.split('.');const last=k.pop();for(const x of k)o=o[x];return[o,last]};
+let t;function push(){clearTimeout(t);t=setTimeout(()=>{localStorage.setItem(KEY,JSON.stringify(S));f.contentWindow&&f.contentWindow.postMessage({type:'site',data:S},'*')},200)}
+f.onload=()=>f.contentWindow.postMessage({type:'site',data:S},'*');
+const E=(tag,cls,txt)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(txt)e.textContent=txt;return e};
+function shrink(file,key,cb){const i=new Image,u=URL.createObjectURL(file);i.onload=()=>{const m=key==='logo'?900:1600,s=Math.min(1,m/Math.max(i.width,i.height)),c=E('canvas');c.width=i.width*s;c.height=i.height*s;c.getContext('2d').drawImage(i,0,0,c.width,c.height);cb(file.type==='image/png'?c.toDataURL('image/png'):c.toDataURL('image/jpeg',.82))};i.src=u}
+function field(obj,key,type,label,after){
+ const w=E('div');w.append(E('label','',label));let v=obj[key];
+ const set=x=>{obj[key]=x;push()};
+ if(type==='text'||type==='color'){const i=E('input');i.type=type;i.value=v||'';i.oninput=()=>set(i.value);w.append(i)}
+ else if(type==='image'){const r=E('div','img'),th=E('img'),i=E('input');i.type='text';i.value=(v||'').startsWith('data:')?'(uploaded photo)':v||'';i.placeholder='images/photo.jpg or upload →';
+  if(v)th.src=v;else th.style.display='none';
+  i.oninput=()=>{set(i.value);th.src=i.value;th.style.display=i.value?'':'none'};
+  const b=E('button','','Upload'),fi=E('input');fi.type='file';fi.accept='image/*';fi.hidden=true;b.onclick=()=>fi.click();
+  fi.onchange=()=>fi.files[0]&&shrink(fi.files[0],key,d=>{set(d);th.src=d;th.style.display='';i.value='(uploaded photo)'});
+  r.append(th,i,b,fi);w.append(r)}
+ else{const a=E('textarea');
+  const to={area:x=>x||'',lines:x=>(x||[]).join('\n'),paras:x=>(x||[]).join('\n\n'),csv:x=>(x||[]).join(', ')}[type];
+  const from={area:x=>x,lines:x=>x.split('\n').map(s=>s.trim()).filter(Boolean),paras:x=>x.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean),csv:x=>x.split(',').map(s=>s.trim()).filter(Boolean)}[type];
+  a.value=to(v);a.oninput=()=>set(from(a.value));w.append(a)}
+ return w}
+function build(){
+ const root=$('form');root.textContent='';
+ SCHEMA.forEach(([title,fields],n)=>{
+  const d=E('details');if(n===0)d.open=true;d.append(E('summary','',title));
+  fields.forEach(([path,type,label,sub])=>{
+   const[o,k]=parent(S,path);
+   if(type!=='list'){d.append(field(o,k,type,label));return}
+   const arr=o[k],box=E('div');
+   const draw=()=>{box.textContent='';arr.forEach((it,i)=>{
+     const c=E('div','item');sub.forEach(([sk,st,sl])=>c.append(field(it,sk,st,sl)));
+     const bar=E('div','bar');bar.append(E('b','',label+' '+(i+1)));
+     const up=E('button','','↑'),dn=E('button','','↓'),del=E('button','','Delete');
+     up.onclick=()=>{if(i>0){[arr[i-1],arr[i]]=[arr[i],arr[i-1]];push();draw()}};
+     dn.onclick=()=>{if(i<arr.length-1){[arr[i+1],arr[i]]=[arr[i],arr[i+1]];push();draw()}};
+     del.onclick=()=>{if(confirm('Delete this item?')){arr.splice(i,1);push();draw()}};
+     const g=E('div');g.style.cssText='display:flex;gap:6px';g.append(up,dn,del);bar.append(g);c.append(bar);box.append(c)})};
+   draw();d.append(box);
+   const add=E('button','','+ Add '+label.toLowerCase());add.style.marginTop='8px';
+   add.onclick=()=>{const n={};sub.forEach(([sk])=>n[sk]='');arr.push(n);push();draw()};d.append(add)});
+  root.append(d)})}
+build();
+[['index.html','Home'],['projects.html','Projects'],['galleries.html','Galleries'],['contact.html','Contact']].forEach(([u,n],i)=>{const b=E('button',i?'':'on',n);b.onclick=()=>{f.src=u;[...$('pg').children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};$('pg').append(b)});
+$('dt').onclick=()=>{f.classList.remove('m');$('dt').classList.add('on');$('mb').classList.remove('on')};
+$('mb').onclick=()=>{f.classList.add('m');$('mb').classList.add('on');$('dt').classList.remove('on')};
+$('dl').onclick=()=>{const a=E('a');a.href=URL.createObjectURL(new Blob(['window.SITE = '+JSON.stringify(S,null,2)+';\n'],{type:'text/javascript'}));a.download='content.js';a.click()};
+$('reset').onclick=()=>{if(confirm('Discard all your unsaved edits and go back to the published version?')){localStorage.removeItem(KEY);location.reload()}};
+</script></body></html>
