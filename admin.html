@@ -34,16 +34,17 @@ iframe{border:0;background:#000;border-radius:12px;width:100%;transition:width .
 <div class="row" style="margin-top:10px"><button id="dt" class="on">Desktop</button><button id="mb">Mobile</button></div>
 <div class="row" style="margin-top:8px" id="pg"></div></div>
 <div class="scroll" id="form"></div>
-<div class="foot"><button class="save" id="dl">Download content.js</button>
-<div class="hint">Replace <b>content.js</b> in your site folder with this file, then re-upload it. (Client galleries are separate: see "Client galleries".)</div>
+<div class="foot"><button class="save" id="dl">Download update (zip)</button>
+<div class="hint">Unzip it over your site folder (replace content.js and keep the images folder), then re-upload the site.</div>
 <button id="reset">Discard my edits</button></div>
 </aside>
 <main><iframe id="f" src="index.html" title="Preview"></iframe></main>
 <script src="content.js"></script>
 <script src="vault.js"></script>
 <script>
-const KEY='lm-draft-v2',$=id=>document.getElementById(id),f=$('f');
+const KEY='lm-draft-v3',$=id=>document.getElementById(id),f=$('f');
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!window.SITE){document.body.innerHTML='<p style="padding:30px">content.js was not found. Keep admin.html in the same folder as content.js.</p>';throw new Error('no content.js')}
 S=S||JSON.parse(JSON.stringify(window.SITE));
 const CAT=(p)=>'select:'+p;
 const SCHEMA=[
@@ -57,10 +58,11 @@ const SCHEMA=[
 ['Home: call to action',[['home.cta.heading','text','Heading'],['home.cta.text','area','Text'],['home.cta.button','text','Button']]],
 ['Projects',[['projects.heading','text','Heading'],['projects.text','area','Intro'],
   ['projects.categories','list','Category',[['name','text','Name'],['text','text','Short line (optional)'],['image','image','Tile image (optional)']]],
-  ['projects.items','list','Project',[['category',CAT('projects.categories'),'Category'],['tag','text','Small label'],['title','text','Title'],['text','area','Description'],['image','image','Cover image'],['link','text','Link (optional)'],['linkLabel','text','Link text']]]]],
+  ['projects.items','list','Project',[['category',CAT('projects.categories'),'Category'],['tag','text','Small label'],['title','text','Title'],['text','area','Description'],['image','image','Cover image'],['link','text','Link (optional)'],['linkLabel','text','Link text'],['embed','text','Instagram post link (shows the post right on the site)']]]]],
 ['Galleries',[['galleries.heading','text','Heading'],['galleries.text','area','Intro'],
   ['galleries.categories','list','Category',[['name','text','Name'],['text','text','Short line (optional)'],['image','image','Tile image (optional)']]],
   ['galleries.items','list','Gallery',[['category',CAT('galleries.categories'),'Category'],['title','text','Title'],['label','text','Small text'],['url','text','Link (only for galleries hosted elsewhere)'],['image','image','Thumbnail (optional)'],['locked','bool','Locked with a password'],['vault','text','Gallery ID (filled in automatically)']]]]],
+['Link page (links.html)',[['links.tagline','text','Tagline'],['links.items','list','Link button',[['label','text','Button text'],['url','text','Link (leave empty on Email to use your contact email)'],['icon','choice:email,website,behance,tiktok,instagram,facebook,link','Icon']]]]],
 ['Contact & links',[['contact.heading','text','Heading'],['contact.text','area','Intro'],['contact.email','text','Email address'],['contact.types','lines','Project types in the form (one per line)'],['contact.socials','list','Social link',[['label','text','Name'],['url','text','Link']]]]],
 ['Colors',[['theme.accents.home','color','Home accent'],['theme.accents.projects','color','Projects accent'],['theme.accents.galleries','color','Galleries accent'],['theme.accents.contact','color','Contact accent'],['theme.bg','color','Background'],['theme.ink','color','Text']]],
 ['Footer',[['footer','text','Footer text']]]];
@@ -75,6 +77,7 @@ function field(obj,key,type,label){
  if(type==='bool'){const l=E('label','chk'),i=E('input');i.type='checkbox';i.checked=!!v;i.onchange=()=>set(i.checked);l.append(i,document.createTextNode(label));return l}
  w.append(E('label','',label));
  if(type==='text'||type==='color'){const i=E('input');i.type=type;i.value=v||(type==='color'?'#ff2a3d':'');i.oninput=()=>set(i.value);w.append(i)}
+ else if(type.startsWith('choice:')){const s=E('select');type.slice(7).split(',').forEach(n=>{const o=E('option','',n);o.value=n;s.append(o)});s.value=v||'link';if(!v)set(s.value);s.onchange=()=>set(s.value);w.append(s)}
  else if(type.startsWith('select:')){const s=E('select'),p=type.slice(7);
   const fill=()=>{s.textContent='';const names=(get(p)||[]).map(c=>c.name);if(obj[key]&&!names.includes(obj[key]))names.push(obj[key]);if(!obj[key]&&names.length)set(names[0]);
    names.forEach(n=>{const o=E('option','',n);o.value=n;s.append(o)});s.value=obj[key]||''};
@@ -91,7 +94,7 @@ function field(obj,key,type,label){
   a.value=to(v);a.oninput=()=>set(from(a.value));w.append(a)}
  return w}
 function build(){
- const root=$('form');root.textContent='';root.append(clientPanel());
+ const root=$('form');root.textContent='';root.append(quickPanel(),clientPanel());
  SCHEMA.forEach(([title,fields])=>{
   const d=E('details');d.append(E('summary','',title));
   fields.forEach(([path,type,label,sub])=>{
@@ -110,6 +113,36 @@ function build(){
    const add=E('button','','+ Add '+label.toLowerCase());add.style.marginTop='8px';
    add.onclick=()=>{const n={};sub.forEach(([sk])=>n[sk]='');arr.push(n);push();draw()};d.append(add)});
   root.append(d)})}
+
+/* ---------- Save: moves uploaded photos into an images folder so the site stays fast ---------- */
+const fnv=s=>{let h=2166136261;for(let i=0;i<s.length;i+=7){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36)+s.length.toString(36)};
+function packSite(){
+ const files={},copy=JSON.parse(JSON.stringify(S));
+ const walkIt=o=>{for(const k in o){const v=o[k];
+  if(typeof v==='string'&&v.startsWith('data:image')){const m=/^data:image\/(\w+);base64,(.*)$/.exec(v);if(!m)continue;
+   const bin=atob(m[2]),b=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);
+   const name='images/'+(k==='logo'?'logo-':'img-')+fnv(m[2])+(m[1]==='png'?'.png':'.jpg');files[name]=b;o[k]=name}
+  else if(v&&typeof v==='object')walkIt(v)}};
+ walkIt(copy);files['content.js']=new TextEncoder().encode('window.SITE = '+JSON.stringify(copy,null,2)+';\n');return files}
+const shrinkP=(file,key)=>new Promise(res=>shrink(file,key||'image',res));
+let quickMsg='';
+function quickPanel(){
+ const d=E('details');d.open=true;d.append(E('summary','','Quick add to Projects'));
+ d.append(E('p','hint','Add lots of work at once. Pick a category, then add photos or paste Instagram post links. Each one becomes a card you can edit below under Projects.'));
+ const cat=E('select'),fill=()=>{cat.textContent='';((S.projects&&S.projects.categories)||[]).forEach(c=>{const o=E('option','',c.name);o.value=c.name;cat.append(o)})};fill();cat.onfocus=fill;
+ const fi=E('input');fi.type='file';fi.accept='image/*';fi.multiple=true;fi.hidden=true;
+ const fb=E('button','','Choose photos…'),msg=E('div','hint');msg.style.marginTop='8px';msg.textContent=quickMsg;
+ const add=items=>{S.projects=S.projects||{};(S.projects.items=S.projects.items||[]).push(...items);push();quickMsg='Added '+items.length+'. Edit titles and details under Projects below.';build()};
+ fb.onclick=()=>fi.click();
+ fi.onchange=async()=>{const fs=[...fi.files];if(!fs.length)return;const out=[];
+  for(let i=0;i<fs.length;i++){msg.textContent='Adding photo '+(i+1)+' of '+fs.length+'…';
+   out.push({category:cat.value,tag:'',title:fs[i].name.replace(/\.[^.]+$/,'').replace(/[-_]+/g,' ').trim(),text:'',image:await shrinkP(fs[i]),link:'',linkLabel:'',embed:''})}
+  add(out)};
+ const ta=E('textarea');ta.placeholder='https://www.instagram.com/p/...\nhttps://www.instagram.com/reel/...';
+ const ab=E('button','','Add Instagram posts');
+ ab.onclick=()=>{const L=ta.value.split(/\s+/).filter(x=>/instagram\.com\/(p|reel|tv)\//.test(x));if(!L.length){msg.textContent='Paste at least one Instagram post or reel link.';return}
+  add(L.map(u=>({category:cat.value,tag:'',title:'',text:'',image:'',link:'',linkLabel:'',embed:u})))};
+ d.append(E('label','','Category'),cat,E('label','','Photos'),fb,fi,E('label','','Instagram post links (one per line)'),ta,ab,msg);return d}
 
 /* ---------- Add a gallery (locked or unlocked) ---------- */
 const LS='lm-client-galleries';let lastMsg='';
@@ -158,7 +191,7 @@ function clientPanel(){
    const meta={title:name.value.trim(),allowDownload:dc.checked};
    const r=locked?await Vault.build(pw.value,meta,out):await Vault.buildOpen(meta,out);
    if(!S.galleries)S.galleries={};(S.galleries.items=S.galleries.items||[]).push({category:cat.value,title:meta.title,label:'',url:'',image:'',vault:r.id,locked});push();
-   r.files['content.js']=new TextEncoder().encode('window.SITE = '+JSON.stringify(S,null,2)+';\n');
+   Object.assign(r.files,packSite());
    const a=E('a');a.href=URL.createObjectURL(Vault.zip(r.files));a.download='gallery-'+r.id.slice(0,6)+'.zip';a.click();
    const L=vlist();L.push({name:meta.title,pw:locked?pw.value:'',id:r.id,count:out.length,locked});localStorage.setItem(LS,JSON.stringify(L));
    lastMsg='Done! Unzip the download over your site folder (say yes to replacing content.js), then upload everything. '+(locked?'Give your client the password shown below.':'');
@@ -167,9 +200,9 @@ function clientPanel(){
  return d}
 const norm=p=>Vault.norm(p);
 build();
-[['index.html','Home'],['projects.html','Projects'],['galleries.html','Galleries'],['contact.html','Contact']].forEach(([u,n],i)=>{const b=E('button',i?'':'on',n);b.onclick=()=>{f.src=u;[...$('pg').children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};$('pg').append(b)});
+[['index.html','Home'],['projects.html','Projects'],['galleries.html','Galleries'],['contact.html','Contact'],['links.html','Link page']].forEach(([u,n],i)=>{const b=E('button',i?'':'on',n);b.onclick=()=>{f.src=u;[...$('pg').children].forEach(x=>x.classList.remove('on'));b.classList.add('on')};$('pg').append(b)});
 $('dt').onclick=()=>{f.classList.remove('m');$('dt').classList.add('on');$('mb').classList.remove('on')};
 $('mb').onclick=()=>{f.classList.add('m');$('mb').classList.add('on');$('dt').classList.remove('on')};
-$('dl').onclick=()=>{const a=E('a');a.href=URL.createObjectURL(new Blob(['window.SITE = '+JSON.stringify(S,null,2)+';\n'],{type:'text/javascript'}));a.download='content.js';a.click()};
+$('dl').onclick=()=>{const l=E('a');l.href=URL.createObjectURL(Vault.zip(packSite()));l.download='site-update.zip';l.click()};
 $('reset').onclick=()=>{if(confirm('Discard all your unsaved edits and go back to the published version?')){localStorage.removeItem(KEY);location.reload()}};
 </script></body></html>

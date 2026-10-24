@@ -3,6 +3,11 @@ const h=(t,c,...k)=>{const e=document.createElement(t);if(c)e.className=c;k.flat
 const A=(href,c,...k)=>{const a=h('a',c,...k);a.href=href||'#';if(/^https?:/.test(href||'')){a.target='_blank';a.rel='noopener'}return a};
 const img=(src,alt,c,eager)=>{const i=h('img',c);i.src=src;i.alt=alt||'';if(!eager)i.loading='lazy';return i};
 const PAGE=document.body.dataset.page||'home';
+if(!window.SITE){
+  const m=document.getElementById('app');
+  if(m)m.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;padding:30px;text-align:center;font-family:Inter,system-ui,sans-serif;color:#f4f4f6"><div><h1 style="font-size:1.6rem;margin-bottom:10px">This page could not load its content</h1><p style="color:#9b9ea8;max-width:46ch;margin:auto">The file <b>content.js</b> was not found next to this page. Upload content.js (and the images folder) to the same place as this page, then refresh.</p></div></div>';
+  return;
+}
 const PREVIEW=window!==window.parent;
 const slug=s=>(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const count=(n,w)=>n+' '+w+(n===1?'':'s');
@@ -36,9 +41,15 @@ function explorer(cats,items,mk,noun,gridCls){
   }
   hashFns.push(sync);sync(true);root.append(tiles,view);return root;
 }
-const mkProject=B=>p=>h('article','pcard',
-  p.image?img(p.image,p.title,'pm'):h('div','pm cover',img(B.logo,'','cl',true)),
-  h('div','pb',p.tag?h('span','tag',p.tag):null,h('h3','',p.title),h('p','',p.text),p.link?A(p.link,'more',(p.linkLabel||'View project')+' →'):null));
+const igSrc=u=>{const m=/instagram\.com\/(p|reel|tv)\/([\w-]+)/.exec(u||'');return m?'https://www.instagram.com/'+(m[1]==='tv'?'p':m[1])+'/'+m[2]+'/embed':null};
+const mkProject=B=>p=>{
+  const src=igSrc(p.embed);
+  if(src){const f=h('iframe','igframe');f.src=src;f.loading='lazy';f.title=p.title||'Instagram post';f.setAttribute('scrolling','no');f.setAttribute('frameborder','0');
+    return h('article','pcard ig',f,h('div','pb',p.title?h('h3','',p.title):null,p.text?h('p','',p.text):null,A(p.embed,'more','View on Instagram →')))}
+  return h('article','pcard',
+    p.image?img(p.image,p.title,'pm'):h('div','pm cover',img(B.logo,'','cl',true)),
+    h('div','pb',p.tag?h('span','tag',p.tag):null,h('h3','',p.title),h('p','',p.text),p.link?A(p.link,'more',(p.linkLabel||'View project')+' →'):null));
+};
 const mkGallery=B=>g=>{
   const a=A(g.url||'#','row'+(g.image?' has-img':''),g.image?img(g.image,'','th'):null,h('span','t',g.title),
     h('span','l',g.vault&&g.locked?h('i','lk'):null,g.label||(g.vault?(g.locked?'Locked':'View gallery'):'Open gallery')),h('span','arr','→'));
@@ -101,10 +112,38 @@ function ask(g,B){
   bg.append(card);document.body.append(bg);document.body.classList.add('lock');setTimeout(()=>input.focus(),60);
 }
 
+const ICONS={
+ email:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7.5l8 6 8-6"/></svg>',
+ instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="3.2" y="3.2" width="17.6" height="17.6" rx="5"/><circle cx="12" cy="12" r="4.1"/><circle cx="17.2" cy="6.8" r="1.1" fill="#fff" stroke="none"/></svg>',
+ facebook:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M13.4 21v-8h2.7l.5-3.2h-3.2V7.9c0-.9.4-1.7 1.8-1.7h1.5V3.4S15.4 3.2 14.2 3.2c-2.6 0-4.3 1.6-4.3 4.4v2.2H7.1V13h2.8v8z"/></svg>',
+ tiktok:'<svg viewBox="0 0 24 24" fill="#fff"><path d="M19.6 6.7a4.8 4.8 0 0 1-3.8-4.3V2h-3.4v13.7a2.9 2.9 0 0 1-5.2 1.7 2.9 2.9 0 0 1 2.3-4.6c.3 0 .6 0 .9.1V9.4a6.8 6.8 0 0 0-1-.1A6.3 6.3 0 0 0 5 20.1a6.3 6.3 0 0 0 10.9-4.4v-7a8.2 8.2 0 0 0 4.8 1.5V6.8a4.9 4.9 0 0 1-1.1-.1z"/></svg>',
+ behance:'<svg viewBox="1.6 3.6 21.2 16.8" fill="#fff"><path d="M9.2 5.5H3v13h6.4c3 0 4.6-1.5 4.6-3.8 0-1.7-.9-2.8-2.4-3.2 1-.5 1.7-1.4 1.7-2.8 0-2.1-1.6-3.2-4.1-3.2zM5.7 7.7h2.9c1.1 0 1.7.5 1.7 1.4 0 .9-.6 1.4-1.7 1.4H5.7zm3.1 8.6H5.7v-3.5h3.1c1.3 0 2 .6 2 1.7 0 1.2-.7 1.8-2 1.8z"/><path d="M15 6.4h5v1.5h-5z"/><path d="M17.5 9.3c-2.6 0-4.2 1.7-4.2 4.1 0 2.5 1.6 4.2 4.3 4.2 2 0 3.4-.9 3.9-2.6h-2.2c-.2.6-.8 1-1.6 1-1.1 0-1.7-.6-1.8-1.7h5.8c.2-2.9-1.3-5-4.2-5zm-1.7 3.3c.1-.9.7-1.5 1.7-1.5s1.5.6 1.6 1.5z"/></svg>',
+ link:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>'
+};
+function renderLinks(S){
+  const B=S.brand,L=S.links||{items:[]},C=S.contact||{},app=document.getElementById('app');app.textContent='';
+  document.title=B.name+' | Links';
+  const page=h('div','lp');
+  page.append(h('div','hero-bg',h('i','blob b1'),h('i','blob b2'),h('i','lines')));
+  const list=h('ul','lp-list');
+  (L.items||[]).forEach((it,i)=>{
+    const url=it.url||(it.icon==='email'&&C.email?'mailto:'+C.email:'#');
+    const ic=h('span','lp-ic');
+    if(it.icon==='website')ic.append(img(B.logo,'','lp-lm',true));else ic.innerHTML=ICONS[it.icon]||ICONS.link;
+    const a=A(url,'lp-btn',ic,h('span','lp-t',it.label),h('span','lp-arr','→'));a.style.setProperty('--i',i);
+    list.append(h('li','',a));
+  });
+  page.append(h('div','lp-in',img(B.logo,B.name,'lp-logo',true),h('h1','',B.name),h('p','lp-tag',L.tagline),list,
+    h('p','lp-foot',S.footer)));
+  page.addEventListener('pointermove',e=>{const b=page.getBoundingClientRect();page.style.setProperty('--mx',(e.clientX-b.left)+'px');page.style.setProperty('--my',(e.clientY-b.top)+'px')});
+  app.append(page);
+}
+
 function render(S){
   const T=S.theme||{},B=S.brand,H=S.hero,P=S.projects||{},G=S.galleries||{},Ab=S.about||{},C=S.contact||{},Hm=S.home||{};
-  const acc=(T.accents&&T.accents[PAGE])||T.accent||'#FF2A3D',r=document.documentElement.style,rgb=x=>[1,3,5].map(i=>parseInt(x.substr(i,2),16)).join(',');
+  const acc=(T.accents&&T.accents[PAGE==='links'?'home':PAGE])||T.accent||'#FF2A3D',r=document.documentElement.style,rgb=x=>[1,3,5].map(i=>parseInt(x.substr(i,2),16)).join(',');
   r.setProperty('--red',acc);r.setProperty('--rgb',rgb(acc));r.setProperty('--bg',T.bg||'#07080B');r.setProperty('--bgrgb',rgb(T.bg||'#07080B'));r.setProperty('--ink',T.ink||'#F4F4F6');
+  if(PAGE==='links'){renderLinks(S);return}
   const label={projects:'Projects',galleries:'Galleries',contact:'Contact'}[PAGE];
   document.title=label?label+' | '+B.name:B.name+(B.title?' | '+B.title:'');
   hashFns.length=0;

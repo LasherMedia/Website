@@ -232,3 +232,25 @@ body.lock{overflow:hidden}
 .shake{animation:shake .4s}
 @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 @keyframes fadeIn{from{opacity:0}}
+
+.igframe{width:100%;height:620px;border:0;background:#fff;display:block}
+.pcard.ig .pb{padding:16px 24px 20px}.pcard.ig .pb h3{margin-top:0}
+
+.cshade{background:linear-gradient(180deg,rgba(var(--bgrgb),.3) 0%,rgba(var(--bgrgb),.55) 45%,rgba(var(--bgrgb),.92) 100%)}
+.cin b,.cin small{text-shadow:0 2px 14px rgba(0,0,0,.7)}.cin .cn{filter:brightness(1.25)}
+
+/* link page */
+.lp{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:56px 20px 36px;position:relative;isolation:isolate;overflow:hidden}
+.lp::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(420px circle at var(--mx,50%) var(--my,25%),rgba(var(--rgb),.16),transparent 65%)}
+.lp-in{width:min(100%,520px);text-align:center}
+.lp-logo{width:116px;height:auto;margin:0 auto;animation:fade 1s both,glow 4s 1.3s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(var(--rgb),.5))}
+.lp h1{font-size:clamp(2rem,8vw,2.9rem);margin:20px auto 0;max-width:none;animation:rise .8s .15s var(--ease) backwards}
+.lp-tag{color:var(--muted);margin-top:10px;animation:rise .8s .25s var(--ease) backwards}
+.lp-list{display:grid;gap:12px;margin-top:34px;list-style:none}
+.lp-btn{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;gap:6px;padding:11px 14px 11px 11px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.045);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);text-decoration:none;font-weight:600;font-size:1.05rem;animation:rise .7s var(--ease) backwards;animation-delay:calc(var(--i)*80ms + 450ms);transition:transform .3s var(--ease),border-color .25s,box-shadow .25s,background .25s}
+.lp-ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:rgba(var(--rgb),.14);border:1px solid rgba(var(--rgb),.38)}
+.lp-ic svg{width:23px;height:23px;display:block}.lp-lm{height:26px;width:auto}
+.lp-arr{opacity:.55;transition:transform .3s var(--ease),opacity .2s,color .2s}
+.lp-btn:hover{transform:translateY(-3px) scale(1.012);border-color:var(--red);box-shadow:var(--glow);background:rgba(var(--rgb),.08)}
+.lp-btn:hover .lp-arr{transform:translateX(5px);opacity:1;color:var(--red)}
+.lp-foot{margin-top:30px;color:var(--muted);font-size:.85rem;animation:rise .8s 1.2s var(--ease) backwards}
