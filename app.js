@@ -120,8 +120,19 @@ const ICONS={
  behance:'<svg viewBox="1.6 3.6 21.2 16.8" fill="#fff"><path d="M9.2 5.5H3v13h6.4c3 0 4.6-1.5 4.6-3.8 0-1.7-.9-2.8-2.4-3.2 1-.5 1.7-1.4 1.7-2.8 0-2.1-1.6-3.2-4.1-3.2zM5.7 7.7h2.9c1.1 0 1.7.5 1.7 1.4 0 .9-.6 1.4-1.7 1.4H5.7zm3.1 8.6H5.7v-3.5h3.1c1.3 0 2 .6 2 1.7 0 1.2-.7 1.8-2 1.8z"/><path d="M15 6.4h5v1.5h-5z"/><path d="M17.5 9.3c-2.6 0-4.2 1.7-4.2 4.1 0 2.5 1.6 4.2 4.3 4.2 2 0 3.4-.9 3.9-2.6h-2.2c-.2.6-.8 1-1.6 1-1.1 0-1.7-.6-1.8-1.7h5.8c.2-2.9-1.3-5-4.2-5zm-1.7 3.3c.1-.9.7-1.5 1.7-1.5s1.5.6 1.6 1.5z"/></svg>',
  link:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>'
 };
+function linkDefaults(S){
+  const soc=((S.contact||{}).socials||[]).filter(s=>s&&s.url&&s.url!=='#'),find=n=>(soc.find(s=>String(s.label).toLowerCase()===n)||{}).url;
+  return{tagline:'Turning Flashbacks into Frames',items:[
+    {label:'Email',url:'',icon:'email'},
+    {label:'Website',url:'https://lashermedia.com',icon:'website'},
+    {label:'Behance',url:find('behance')||'https://www.behance.net/lashermedia',icon:'behance'},
+    {label:'TikTok',url:find('tiktok')||'https://www.tiktok.com/@lashermedia_',icon:'tiktok'},
+    {label:'Instagram',url:find('instagram')||'https://www.instagram.com/lashermedia',icon:'instagram'},
+    {label:'Facebook',url:find('facebook')||'https://www.facebook.com/lashermedia/',icon:'facebook'}]};
+}
 function renderLinks(S){
-  const B=S.brand,L=S.links||{items:[]},C=S.contact||{},app=document.getElementById('app');app.textContent='';
+  const B=S.brand,C=S.contact||{},app=document.getElementById('app');app.textContent='';
+  const L=(S.links&&(S.links.items||[]).length)?S.links:linkDefaults(S);
   document.title=B.name+' | Links';
   const page=h('div','lp');
   page.append(h('div','hero-bg',h('i','blob b1'),h('i','blob b2'),h('i','lines')));
