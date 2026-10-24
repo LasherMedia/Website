@@ -118,7 +118,7 @@ window.SITE = {
       {
         "name": "Graphic Design",
         "text": "",
-        "image": "images/projects-categories-3-image.jpg"
+        "image": "images/img-sqx4spfhtg.png"
       },
       {
         "name": "Motion Design",
@@ -281,16 +281,7 @@ window.SITE = {
         "image": "images/galleries-categories-3-image.jpg"
       }
     ],
-    "items": [
-      {
-        "category": "Football",
-        "title": "Queen's Gaels vs Montreal Carabins",
-        "label": "Open gallery",
-        "url": "#",
-        "image": "",
-        "locked": true
-      }
-    ],
+    "items": [],
     "client": {
       "heading": "Client gallery access",
       "text": "Enter the password I gave you to open your private gallery.",
@@ -330,6 +321,38 @@ window.SITE = {
   },
   "footer": "© 2026 Ryland Lasher",
   "links": {
-    "items": []
+    "tagline": "Turning Flashbacks into Frames",
+    "items": [
+      {
+        "label": "Email",
+        "url": "",
+        "icon": "email"
+      },
+      {
+        "label": "Website",
+        "url": "https://lashermedia.com",
+        "icon": "website"
+      },
+      {
+        "label": "Behance",
+        "url": "https://www.behance.net/lashermedia",
+        "icon": "behance"
+      },
+      {
+        "label": "TikTok",
+        "url": "https://www.tiktok.com/@lashermedia_",
+        "icon": "tiktok"
+      },
+      {
+        "label": "Instagram",
+        "url": "https://www.instagram.com/lashermedia",
+        "icon": "instagram"
+      },
+      {
+        "label": "Facebook",
+        "url": "https://www.facebook.com/lashermedia/",
+        "icon": "facebook"
+      }
+    ]
   }
 };

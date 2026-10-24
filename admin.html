@@ -46,6 +46,9 @@ const KEY='lm-draft-v3',$=id=>document.getElementById(id),f=$('f');
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!window.SITE){document.body.innerHTML='<p style="padding:30px">content.js was not found. Keep admin.html in the same folder as content.js.</p>';throw new Error('no content.js')}
 S=S||JSON.parse(JSON.stringify(window.SITE));
+if(!S.links||!(S.links.items||[]).length){S.links={tagline:'Turning Flashbacks into Frames',items:[
+ {label:'Email',url:'',icon:'email'},{label:'Website',url:'https://lashermedia.com',icon:'website'},{label:'Behance',url:'https://www.behance.net/lashermedia',icon:'behance'},
+ {label:'TikTok',url:'https://www.tiktok.com/@lashermedia_',icon:'tiktok'},{label:'Instagram',url:'https://www.instagram.com/lashermedia',icon:'instagram'},{label:'Facebook',url:'https://www.facebook.com/lashermedia/',icon:'facebook'}]}}
 const CAT=(p)=>'select:'+p;
 const SCHEMA=[
 ['Logo & name',[['brand.name','text','Site name (tab title)'],['brand.showName','bool','Show the name next to the logo'],['brand.title','text','Browser tab subtitle'],['brand.logo','image','Logo']]],
@@ -61,7 +64,7 @@ const SCHEMA=[
   ['projects.items','list','Project',[['category',CAT('projects.categories'),'Category'],['tag','text','Small label'],['title','text','Title'],['text','area','Description'],['image','image','Cover image'],['link','text','Link (optional)'],['linkLabel','text','Link text'],['embed','text','Instagram post link (shows the post right on the site)']]]]],
 ['Galleries',[['galleries.heading','text','Heading'],['galleries.text','area','Intro'],
   ['galleries.categories','list','Category',[['name','text','Name'],['text','text','Short line (optional)'],['image','image','Tile image (optional)']]],
-  ['galleries.items','list','Gallery',[['category',CAT('galleries.categories'),'Category'],['title','text','Title'],['label','text','Small text'],['url','text','Link (only for galleries hosted elsewhere)'],['image','image','Thumbnail (optional)'],['locked','bool','Locked with a password'],['vault','text','Gallery ID (filled in automatically)']]]]],
+  ['galleries.items','list','Gallery',[['category',CAT('galleries.categories'),'Category'],['title','text','Title'],['label','text','Small text'],['url','text','Link (only for galleries hosted elsewhere)'],['image','image','Image (shows on the gallery card)'],['locked','bool','Locked with a password'],['vault','text','Gallery ID (filled in automatically)']]]]],
 ['Link page (links.html)',[['links.tagline','text','Tagline'],['links.items','list','Link button',[['label','text','Button text'],['url','text','Link (leave empty on Email to use your contact email)'],['icon','choice:email,website,behance,tiktok,instagram,facebook,link','Icon']]]]],
 ['Contact & links',[['contact.heading','text','Heading'],['contact.text','area','Intro'],['contact.email','text','Email address'],['contact.types','lines','Project types in the form (one per line)'],['contact.socials','list','Social link',[['label','text','Name'],['url','text','Link']]]]],
 ['Colors',[['theme.accents.home','color','Home accent'],['theme.accents.projects','color','Projects accent'],['theme.accents.galleries','color','Galleries accent'],['theme.accents.contact','color','Contact accent'],['theme.bg','color','Background'],['theme.ink','color','Text']]],
@@ -94,7 +97,7 @@ function field(obj,key,type,label){
   a.value=to(v);a.oninput=()=>set(from(a.value));w.append(a)}
  return w}
 function build(){
- const root=$('form');root.textContent='';root.append(quickPanel(),clientPanel());
+ const root=$('form');root.textContent='';root.append(linkPanel(),quickPanel(),clientPanel());
  SCHEMA.forEach(([title,fields])=>{
   const d=E('details');d.append(E('summary','',title));
   fields.forEach(([path,type,label,sub])=>{
@@ -144,6 +147,29 @@ function quickPanel(){
   add(L.map(u=>({category:cat.value,tag:'',title:'',text:'',image:'',link:'',linkLabel:'',embed:u})))};
  d.append(E('label','','Category'),cat,E('label','','Photos'),fb,fi,E('label','','Instagram post links (one per line)'),ta,ab,msg);return d}
 
+/* ---------- Add a game gallery link (with image) ---------- */
+const slugA=s=>(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+let linkMsg='';
+function linkPanel(){
+ const d=E('details');d.open=true;d.append(E('summary','','Add a game gallery link (with image)'));
+ d.append(E('p','hint','Paste the link to your photos (Drive, Pixieset, etc.), add a picture, and it appears as a card inside the category you pick on your Galleries page. Then post your site link so people can find it.'));
+ const name=E('input');name.type='text';name.placeholder='e.g. Gaels vs Carabins, Oct 18';
+ const url=E('input');url.type='text';url.placeholder='https://...';
+ const small=E('input');small.type='text';small.placeholder='View photos';
+ const cat=E('select'),fill=()=>{cat.textContent='';((S.galleries&&S.galleries.categories)||[]).forEach(c=>{const o=E('option','',c.name);o.value=c.name;cat.append(o)})};fill();cat.onfocus=fill;
+ const fi=E('input');fi.type='file';fi.accept='image/*';fi.hidden=true;const fb=E('button','','Choose image'),fc=E('span','hint',' none chosen');
+ fb.onclick=()=>fi.click();fi.onchange=()=>fc.textContent=' '+(fi.files[0]?fi.files[0].name:'none chosen');
+ const go=E('button','go','Add to Galleries'),st=E('div','hint');st.style.marginTop='8px';st.textContent=linkMsg;
+ go.onclick=async()=>{
+  if(!name.value.trim()||!/^https?:\/\//.test(url.value.trim())){st.textContent='Add a name and a link that starts with https://';return}
+  go.disabled=true;
+  const img=fi.files[0]?await shrinkP(fi.files[0]):'';
+  (S.galleries=S.galleries||{}).items=S.galleries.items||[];
+  S.galleries.items.unshift({category:cat.value||'',title:name.value.trim(),label:small.value.trim(),url:url.value.trim(),image:img,vault:'',locked:false});
+  push();linkMsg='Added to '+(cat.value||'Galleries')+'. Direct link to it: yourwebsite/galleries#'+slugA(name.value)+'  Now click "Download update (zip)" and upload it.';build()};
+ d.append(E('label','','Game or gallery name'),name,E('label','','Link to the photos'),url,E('label','','Small text on the card (optional)'),small,E('label','','Category'),cat,E('label','','Image'),fb,fc,fi,E('div','',''),go,st);
+ return d}
+
 /* ---------- Add a gallery (locked or unlocked) ---------- */
 const LS='lm-client-galleries';let lastMsg='';
 const vlist=()=>{try{return JSON.parse(localStorage.getItem(LS)||'[]')}catch(e){return[]}};
@@ -190,7 +216,7 @@ function clientPanel(){
    st.textContent=locked?'Encrypting…':'Packaging…';
    const meta={title:name.value.trim(),allowDownload:dc.checked};
    const r=locked?await Vault.build(pw.value,meta,out):await Vault.buildOpen(meta,out);
-   if(!S.galleries)S.galleries={};(S.galleries.items=S.galleries.items||[]).push({category:cat.value,title:meta.title,label:'',url:'',image:'',vault:r.id,locked});push();
+   if(!S.galleries)S.galleries={};(S.galleries.items=S.galleries.items||[]).unshift({category:cat.value,title:meta.title,label:'',url:'',image:'',vault:r.id,locked});push();
    Object.assign(r.files,packSite());
    const a=E('a');a.href=URL.createObjectURL(Vault.zip(r.files));a.download='gallery-'+r.id.slice(0,6)+'.zip';a.click();
    const L=vlist();L.push({name:meta.title,pw:locked?pw.value:'',id:r.id,count:out.length,locked});localStorage.setItem(LS,JSON.stringify(L));
