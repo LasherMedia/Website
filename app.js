@@ -3,6 +3,7 @@ const h=(t,c,...k)=>{const e=document.createElement(t);if(c)e.className=c;k.flat
 const A=(href,c,...k)=>{const a=h('a',c,...k);a.href=href||'#';if(/^https?:/.test(href||'')){a.target='_blank';a.rel='noopener'}return a};
 const img=(src,alt,c,eager)=>{const i=h('img',c);i.src=src;i.alt=alt||'';if(!eager)i.loading='lazy';return i};
 const PAGE=document.body.dataset.page||'home';
+const setVh=()=>document.documentElement.style.setProperty('--vh',(window.innerHeight/100)+'px');setVh();addEventListener('resize',setVh);addEventListener('orientationchange',()=>setTimeout(setVh,250));
 if(!window.SITE){
   const m=document.getElementById('app');
   if(m)m.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;padding:30px;text-align:center;font-family:Inter,system-ui,sans-serif;color:#f4f4f6"><div><h1 style="font-size:1.6rem;margin-bottom:10px">This page could not load its content</h1><p style="color:#9b9ea8;max-width:46ch;margin:auto">The file <b>content.js</b> was not found next to this page. Upload content.js (and the images folder) to the same place as this page, then refresh.</p></div></div>';

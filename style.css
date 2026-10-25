@@ -30,7 +30,7 @@ body.menu .burger i:first-child{top:19px;transform:rotate(45deg)}body.menu .burg
 }
 
 /* hero */
-.hero{min-height:100svh;display:flex;align-items:center;padding:110px 0 90px;overflow:hidden;isolation:isolate}
+.hero{min-height:calc(var(--vh,1vh)*100);display:flex;align-items:center;padding:110px 0 90px;overflow:hidden;isolation:isolate}
 .hero-bg{position:absolute;inset:0;z-index:-2}
 .blob{position:absolute;border-radius:50%;filter:blur(90px);background:rgba(var(--rgb),.5);animation:drift 14s ease-in-out infinite alternate}
 .b1{width:46vw;height:46vw;max-width:620px;max-height:620px;right:-10%;top:-12%}
@@ -240,7 +240,7 @@ body.lock{overflow:hidden}
 .cin b,.cin small{text-shadow:0 2px 14px rgba(0,0,0,.7)}.cin .cn{filter:brightness(1.25)}
 
 /* link page */
-.lp{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:56px 20px 36px;position:relative;isolation:isolate;overflow:hidden}
+.lp{min-height:calc(var(--vh,1vh)*100);display:flex;align-items:center;justify-content:center;padding:56px 20px 36px;position:relative;isolation:isolate;overflow:hidden}
 .lp::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(420px circle at var(--mx,50%) var(--my,25%),rgba(var(--rgb),.16),transparent 65%)}
 .lp-in{width:min(100%,520px);text-align:center}
 .lp-logo{width:116px;height:auto;margin:0 auto;animation:fade 1s both,glow 4s 1.3s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(var(--rgb),.5))}
@@ -273,23 +273,25 @@ body.lock{overflow:hidden}
 
 /* link page: fits any phone */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-.lp{min-height:100svh;padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.lp{min-height:calc(var(--vh,1vh)*100);padding:max(20px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 .lp-in{width:min(100%,520px)}
-.lp-logo{width:clamp(72px,15svh,116px)}
-.lp h1{font-size:clamp(1.6rem,min(9vw,6.5svh),2.9rem);margin-top:clamp(10px,2.4svh,20px)}
-.lp-tag{font-size:clamp(.85rem,2.1svh,1rem);margin-top:clamp(4px,1svh,10px)}
-.lp-list{gap:clamp(8px,1.5svh,12px);margin-top:clamp(16px,3.4svh,34px)}
-.lp-btn{min-height:clamp(52px,8.2svh,70px);grid-template-columns:clamp(38px,6svh,46px) minmax(0,1fr) clamp(30px,5svh,46px);padding:clamp(7px,1.2svh,11px) 12px clamp(7px,1.2svh,11px) clamp(7px,1.2svh,11px);font-size:clamp(.95rem,2.4svh,1.05rem)}
-.lp-ic{width:clamp(38px,6svh,46px);height:clamp(38px,6svh,46px)}
+.lp-logo{width:clamp(72px,calc(var(--vh,1vh)*15),116px)}
+.lp h1{font-size:clamp(1.6rem,min(9vw,calc(var(--vh,1vh)*6.5)),2.9rem);margin-top:clamp(10px,calc(var(--vh,1vh)*2.4),20px)}
+.lp-tag{font-size:clamp(.85rem,calc(var(--vh,1vh)*2.1),1rem);margin-top:clamp(4px,calc(var(--vh,1vh)*1),10px)}
+.lp-list{gap:clamp(8px,calc(var(--vh,1vh)*1.5),12px);margin-top:clamp(16px,calc(var(--vh,1vh)*3.4),34px)}
+.lp-btn{min-height:clamp(52px,calc(var(--vh,1vh)*8.2),70px);grid-template-columns:clamp(38px,calc(var(--vh,1vh)*6),46px) minmax(0,1fr) clamp(30px,calc(var(--vh,1vh)*5),46px);padding:clamp(7px,calc(var(--vh,1vh)*1.2),11px) 12px clamp(7px,calc(var(--vh,1vh)*1.2),11px) clamp(7px,calc(var(--vh,1vh)*1.2),11px);font-size:clamp(.95rem,calc(var(--vh,1vh)*2.4),1.05rem)}
+.lp-ic{width:clamp(38px,calc(var(--vh,1vh)*6),46px);height:clamp(38px,calc(var(--vh,1vh)*6),46px)}
 .lp-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.lp-foot{margin-top:clamp(14px,3svh,30px)}
+.lp-foot{margin-top:clamp(14px,calc(var(--vh,1vh)*3),30px)}
 @media(max-height:520px) and (orientation:landscape){.lp-in{width:min(100%,760px)}.lp-list{grid-template-columns:1fr 1fr}.lp-logo{width:64px}}
 
 .lp{padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(16px,env(safe-area-inset-bottom))}
-.lp-logo{width:clamp(60px,14svh,116px)}
-.lp-btn{min-height:clamp(46px,8svh,70px)}
-.lp-ic{width:clamp(36px,5.8svh,46px);height:clamp(36px,5.8svh,46px)}
-.lp-btn{grid-template-columns:clamp(36px,5.8svh,46px) minmax(0,1fr) clamp(28px,5svh,46px)}
+.lp-logo{width:clamp(60px,calc(var(--vh,1vh)*14),116px)}
+.lp-btn{min-height:clamp(46px,calc(var(--vh,1vh)*8),70px)}
+.lp-ic{width:clamp(36px,calc(var(--vh,1vh)*5.8),46px);height:clamp(36px,calc(var(--vh,1vh)*5.8),46px)}
+.lp-btn{grid-template-columns:clamp(36px,calc(var(--vh,1vh)*5.8),46px) minmax(0,1fr) clamp(28px,calc(var(--vh,1vh)*5),46px)}
 @media(max-height:520px) and (orientation:landscape){.lp-logo{width:52px}.lp h1{font-size:1.5rem}.lp-list{margin-top:14px;gap:8px}.lp-foot{margin-top:12px}}
 
 .latest .ggrid.one{grid-template-columns:minmax(0,560px)}
+
+@media(hover:none){.lp-btn:hover{transform:none}.gcard:hover,.cat:hover,.pcard:hover{transform:none}}
