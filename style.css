@@ -295,3 +295,30 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .latest .ggrid.one{grid-template-columns:minmax(0,560px)}
 
 @media(hover:none){.lp-btn:hover{transform:none}.gcard:hover,.cat:hover,.pcard:hover{transform:none}}
+
+/* password popup: slim and on-theme */
+.pop-bg{background:radial-gradient(60% 50% at 50% 40%,rgba(var(--rgb),.16),rgba(0,0,0,.72));backdrop-filter:blur(10px) saturate(120%);-webkit-backdrop-filter:blur(10px) saturate(120%)}
+.pop{width:min(100%,328px);padding:34px 24px 20px;border-radius:26px;background:linear-gradient(180deg,rgba(26,28,38,.97),rgba(11,12,17,.98));border:1px solid rgba(var(--rgb),.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),var(--glow),0 30px 80px rgba(0,0,0,.7)}
+.pop::before{content:"";position:absolute;left:24px;right:24px;top:0;height:2px;border-radius:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);box-shadow:var(--glow)}
+.pop h3{font-size:1.28rem;letter-spacing:-.035em;margin:16px 0 4px;line-height:1.15}
+.pop .psub{font-size:.84rem;color:var(--muted);line-height:1.35;max-width:26ch;margin:0 auto}
+.pform{margin-top:20px;gap:10px}
+.pwrap{position:relative}
+.pwrap input{width:100%;text-align:left;letter-spacing:.02em;font-size:.98rem;padding:14px 58px 14px 16px;border-radius:14px;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.12)}
+.pwrap input::placeholder{color:rgba(244,244,246,.4)}
+.pwrap input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(var(--rgb),.22),0 0 18px rgba(var(--rgb),.25)}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--muted);font:600 .76rem 'Inter',sans-serif;padding:8px;cursor:pointer;border-radius:8px}
+.eye:hover{color:var(--ink)}
+.pop .pform .btn,.pop .pgo{width:100%;padding:13px;border-radius:14px;text-align:center}
+.pop .pgo{display:block;margin-top:18px}
+.pop .pmsg{min-height:1.2em;margin-top:10px;font-size:.84rem}
+.pop-logo{height:20px;margin:16px auto 0;opacity:.8}
+.pop.ok .plock{border-color:#2BFF88;box-shadow:0 0 18px rgba(43,255,136,.5)}.pop.ok .plock::before{border-color:#2BFF88;transform:translateY(-3px) rotate(-18deg) translateX(3px)}
+.pop.ok::before{background:linear-gradient(90deg,transparent,#2BFF88,transparent)}
+@media(max-width:380px){.pop{padding:30px 18px 18px}}
+
+.pop h3{font-size:1.12rem;white-space:nowrap}
+@media(max-width:340px){.pop h3{font-size:1.02rem}}
+
+.latest .ggrid.two{grid-template-columns:1fr}
+@media(min-width:700px){.latest .ggrid.two{grid-template-columns:1fr 1fr}}

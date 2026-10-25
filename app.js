@@ -58,12 +58,13 @@ const mkProject=B=>p=>{
     p.image?img(p.image,p.title,'pm'):h('div','pm cover',img(B.logo,'','cl',true)),
     h('div','pb',p.tag?h('span','tag',p.tag):null,h('h3','',p.title),h('p','',p.text),p.link?A(p.link,'more',(p.linkLabel||'View project')+' →'):null));
 };
+const isLocked=g=>!!((g.vault&&g.locked)||g.protectedUrl||(PREVIEW&&g.password));
 const mkGallery=B=>g=>{
-  const locked=g.vault&&g.locked;
+  const locked=isLocked(g);
   const c=A(g.url||'#','gcard',g.image?img(g.image,g.title,'gimg'):h('div','gimg gen',img(B.logo,'','gcl',true)),h('i','gshade'),
-    h('div','gin',h('span','gl',locked?h('i','lk'):null,g.label||(g.vault?(locked?'Locked':'View gallery'):'View photos')),h('b','',g.title)),h('span','arr','→'));
+    h('div','gin',h('span','gl',locked?h('i','lk'):null,g.label||(locked?'Password protected':(g.vault?'View gallery':'View photos'))),h('b','',g.title)),h('span','arr','→'));
   c.dataset.slug=slug(g.title);
-  if(g.vault)c.onclick=e=>{e.preventDefault();locked?ask(g,B):openPublic(g)};
+  if(g.vault||locked)c.onclick=e=>{e.preventDefault();locked?ask(g,B):openPublic(g)};
   return c};
 
 /* password-protected gallery viewer */
@@ -101,21 +102,35 @@ async function openPublic(g){
 }
 function ask(g,B){
   const bg=h('div','pop-bg'),card=h('div','pop'),input=h('input');
-  input.type='text';input.placeholder='Password';input.autocomplete='off';input.spellcheck=false;input.setAttribute('aria-label','Gallery password');
+  input.type='password';input.placeholder='Enter password';input.autocomplete='off';input.spellcheck=false;input.autocapitalize='off';input.setAttribute('aria-label','Gallery password');
+  const eye=h('button','eye','Show');eye.type='button';eye.onclick=()=>{const s=input.type==='password';input.type=s?'text':'password';eye.textContent=s?'Hide':'Show'};
   const btn=h('button','btn primary','Unlock');btn.type='submit';
-  const msg=h('p','pmsg'),form=h('form','pform',input,btn),x=h('button','px','✕');x.type='button';x.setAttribute('aria-label','Close');
-  card.append(x,h('span','plock'),h('h3','',g.title),h('p','','This gallery is locked. Enter the password you were given.'),form,msg,img(B.logo,'','pop-logo',true));
+  const msg=h('p','pmsg'),form=h('form','pform',h('div','pwrap',input,eye),btn),x=h('button','px','✕');x.type='button';x.setAttribute('aria-label','Close');
+  const title=h('h3','','This is password protected.'),sub=h('p','psub',g.title);
+  card.append(x,h('span','plock'),title,sub,form,msg,img(B.logo,'','pop-logo',true));
   const close=()=>{bg.remove();removeEventListener('keydown',key);document.body.classList.remove('lock')};
   const key=e=>{if(e.key==='Escape')close()};addEventListener('keydown',key);
   x.onclick=close;bg.onclick=e=>{if(e.target===bg)close()};
+  const unlocked=url=>{
+    card.classList.add('ok');title.textContent='Unlocked.';sub.textContent='Your gallery is ready.';
+    form.replaceWith(A(url,'btn primary pgo','Open gallery →'));msg.textContent='';
+  };
   form.onsubmit=async e=>{
-    e.preventDefault();const pw=input.value.trim();if(!pw)return;btn.disabled=true;msg.textContent='Unlocking…';
+    e.preventDefault();const pw=input.value.trim();if(!pw)return;btn.disabled=true;msg.textContent='Checking…';
     try{
-      if(!window.Vault||!(window.crypto&&crypto.subtle))throw new Error('nosec');
-      const v=await Vault.open(g.vault,pw);close();viewer(v);
+      if(g.vault){
+        if(!window.Vault||!(window.crypto&&crypto.subtle))throw new Error('nosec');
+        const v=await Vault.open(g.vault,pw);close();viewer(v);
+      }else if(g.protectedUrl){
+        if(!window.Vault||!(window.crypto&&crypto.subtle))throw new Error('nosec');
+        unlocked(await Vault.unlockLink(g.protectedUrl,pw));
+      }else{
+        if(String(pw).toLowerCase()!==String(g.password).trim().toLowerCase())throw new Error('bad');
+        unlocked(g.url||'#');
+      }
     }catch(err){
-      msg.textContent=err.message==='nosec'?'Locked galleries need a secure (https) connection.':err.message==='missing'?'This gallery is not available right now.':'That password did not work. Check it and try again.';
-      card.classList.remove('shake');void card.offsetWidth;card.classList.add('shake');
+      msg.textContent=err.message==='nosec'?'Protected galleries need a secure (https) connection.':err.message==='missing'?'This gallery is not available right now.':'That password isn\'t right. Try again.';
+      card.classList.remove('shake');void card.offsetWidth;card.classList.add('shake');input.select();
     }
     btn.disabled=false;
   };
@@ -222,11 +237,12 @@ function render(S){
   /* galleries */
   const gs=h('section','');
   const [gc,gItems]=sorted(G.categories,G.items);
-  const latest=gItems.length?h('div','latest reveal',h('h3','sub','Most recent'),h('div','ggrid one',mkGallery(B)(gItems[0]))):null;
+  const recent=gItems.slice(0,2);
+  const latest=recent.length?h('div','latest reveal',h('h3','sub','Most recent'),h('div','ggrid '+(recent.length>1?'two':'one'),recent.map(mkGallery(B)))):null;
   gs.append(h('div','wrap',head('Galleries',G.heading,G.text),explorer(gc,gItems,mkGallery(B),'gallery','ggrid',latest)));secs.galleries=gs;
   if(PAGE==='galleries'&&!PREVIEW){
     const go=()=>{const s=decodeURIComponent((location.hash||'').slice(1)),g=gItems.find(x=>slug(x.title)===s);if(!g)return;
-      if(g.vault){g.locked?ask(g,B):openPublic(g)}
+      if(g.vault||isLocked(g)){isLocked(g)?ask(g,B):openPublic(g)}
       else{if(g.category&&decodeURIComponent(location.hash.slice(1))!==slug(g.category))location.hash='#'+slug(g.category);
         setTimeout(()=>{const el=[...document.querySelectorAll('[data-slug="'+s+'"]')].find(e=>e.offsetParent);if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('flash')}},250)}};
     hashFns.push(go);setTimeout(go,350);

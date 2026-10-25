@@ -266,11 +266,6 @@ window.SITE = {
     "text": "Browse past shoots by category, or open your private gallery with the password I sent you.",
     "categories": [
       {
-        "name": "Football",
-        "text": "",
-        "image": ""
-      },
-      {
         "name": "Hockey",
         "text": "",
         "image": "images/galleries-categories-2-image.jpg"
@@ -279,6 +274,11 @@ window.SITE = {
         "name": "Events",
         "text": "",
         "image": "images/galleries-categories-3-image.jpg"
+      },
+      {
+        "name": "Baseball",
+        "text": "",
+        "image": "images/img-p2mw6ye6l8.jpg"
       }
     ],
     "items": [
@@ -288,6 +288,109 @@ window.SITE = {
         "label": "",
         "url": "https://photos.app.goo.gl/suR7iKSsPyf1B3zG7",
         "image": "images/img-y65at9bq6o.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Hockey",
+        "title": "USports Hockey | Queen's University Gaels vs Universite de Montreal",
+        "label": "",
+        "url": "https://photos.app.goo.gl/1qzyt8sk8MJfigD87",
+        "image": "images/img-1eu23eh8a84.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Events",
+        "title": "Passion 4 Presence Harvest Fundraiser 2026",
+        "label": "",
+        "url": "",
+        "image": "images/img-13effe39dw0.jpg",
+        "vault": "",
+        "locked": false,
+        "protectedUrl": {
+          "s": "a4pIfJjvEVfOfAY9NgQQoA==",
+          "d": "HevZJ6fIvCWi7tgpnfexv3N5lq3lYIaNRLFdXP8vpcmc8a+57dRAx+DZMTqSzl3ioyt/9Uxl0W2jcosAW5mmqsKlbSFFIVFhSgVdSqaV2+c/RYIA0thkQL+m02rH5uevfjj9+4KZXRHEpbHMOd/wT6dlGt2o5tzN7ssMNLKdY7l+pJtek65qLXMooEN837jFdhXXIZehCKggUM5Hm095B0OUT7sZKg61sUOTLHiEyQ=="
+        }
+      },
+      {
+        "category": "Events",
+        "title": "404 Band Shoot | 04/24",
+        "label": "",
+        "url": "https://photos.app.goo.gl/9nW26tKMkX4E1r6Z7",
+        "image": "images/img-1r435we5t70.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Hockey",
+        "title": "St Theresa's vs Sydenham (OFSAA Gold Medal Game)",
+        "label": "",
+        "url": "https://drive.google.com/drive/folders/1-9Vhsqpgy-Ni-jXGjDuIT-lY9p1ggCXM?usp=sharing",
+        "image": "images/img-a953aja0og.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Hockey",
+        "title": "St Theresa's vs St James (OFSAA Hockey)",
+        "label": "",
+        "url": "https://drive.google.com/drive/folders/1R12i447YtJPZaywcG2zljA2Jd6numg-G?usp=sharing",
+        "image": "images/img-1aoyczda8p8.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Hockey",
+        "title": "Kincardine vs King City (OFSAA Hockey)",
+        "label": "",
+        "url": "https://drive.google.com/drive/folders/1eNFr3dsfeSjQLmp07grwRnLZGuEhtd5e?usp=drive_link",
+        "image": "images/img-i59qv8r6c.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Hockey",
+        "title": "Quinte Red Devils vs North Central Predators U13 AAA",
+        "label": "",
+        "url": "https://drive.google.com/drive/folders/1rygo3GJAWZVdOh1WMqpwCYYNKnCiSJOf?usp=drive_link",
+        "image": "images/img-64tv9ka68k.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Hockey",
+        "title": "OMHA Showcase - Quinte Red Devils vs Ajax-Simcoe Express (U16 AAA)",
+        "label": "",
+        "url": "https://drive.google.com/drive/folders/1Ku_eSdUSWFuy0EUgCdNQzzVCqnXRuYXR?usp=sharing",
+        "image": "images/img-1dh97yfb96s.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Hockey",
+        "title": "Quinte Red Devils vs North Central Predators (U16 AAA)",
+        "label": "",
+        "url": "https://drive.google.com/drive/folders/1zPZH885cSINFtfMFLgX0tVWE0nCZp_1T?usp=sharing",
+        "image": "images/img-lt8nircl3c.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Hockey",
+        "title": "Belleville Bulls U16 A vs Peterborough Petes U16 A",
+        "label": "",
+        "url": "https://drive.google.com/drive/folders/1DBakxfc9rS9cvnJc64TnEwc-VVt2szdh?usp=sharing",
+        "image": "images/img-h5tj7zb35s.jpg",
+        "vault": "",
+        "locked": false
+      },
+      {
+        "category": "Baseball",
+        "title": "Napanee Express vs Clarington Ravens (U13) | July 14th, 2026",
+        "label": "",
+        "url": "https://photos.app.goo.gl/V6eugWTdFzssGjp4A",
+        "image": "images/img-p2mw6ye6l8.jpg",
         "vault": "",
         "locked": false
       }

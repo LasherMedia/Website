@@ -60,5 +60,10 @@ function zip(files){
   const end=new Uint8Array([0x50,0x4b,5,6,0,0,0,0,...u16(keys.length),...u16(keys.length),...u32(cs),...u32(off),0,0]);
   return new Blob([...parts,...cen,end],{type:'application/zip'});
 }
-g.Vault={build,buildOpen,open,openPublic,zip,norm};
+/* password for a plain link: the link is stored encrypted, never as readable text */
+const b64=b=>{let s='';new Uint8Array(b).forEach(c=>s+=String.fromCharCode(c));return btoa(s)};
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function lockLink(url,pw){const salt=crypto.getRandomValues(new Uint8Array(16)),key=await keyFor(pw,salt);return{s:b64(salt),d:b64(await seal(key,enc.encode(url)))}}
+async function unlockLink(o,pw){const key=await keyFor(pw,unb64(o.s));try{return dec.decode(await unseal(key,unb64(o.d)))}catch(e){throw new Error('bad')}}
+g.Vault={build,buildOpen,open,openPublic,zip,norm,lockLink,unlockLink};
 })(typeof window!=='undefined'?window:globalThis);
