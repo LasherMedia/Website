@@ -2,14 +2,18 @@
 const h=(t,c,...k)=>{const e=document.createElement(t);if(c)e.className=c;k.flat().forEach(x=>x!=null&&x!==false&&e.append(x));return e};
 const A=(href,c,...k)=>{const a=h('a',c,...k);a.href=href||'#';if(/^https?:/.test(href||'')){a.target='_blank';a.rel='noopener'}return a};
 const img=(src,alt,c,eager)=>{const i=h('img',c);i.src=src;i.alt=alt||'';if(!eager)i.loading='lazy';return i};
-const PAGE=document.body.dataset.page||'home';
+const HOST=location.hostname.toLowerCase();
+/* socials.lashermedia.com (or links./link./bio.) opens the link page at its root, so no /links needed */
+const AS_LINKS=document.body.dataset.page==='home'&&/^(socials|links|link|bio)\./.test(HOST)&&location.pathname.replace(/index\.html$/,'').replace(/\/+$/,'')==='';
+const PAGE=AS_LINKS?'links':(document.body.dataset.page||'home');
 const setVh=()=>document.documentElement.style.setProperty('--vh',(window.innerHeight/100)+'px');setVh();addEventListener('resize',setVh);addEventListener('orientationchange',()=>setTimeout(setVh,250));
 if(!window.SITE){
   const m=document.getElementById('app');
   if(m)m.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;padding:30px;text-align:center;font-family:Inter,system-ui,sans-serif;color:#f4f4f6"><div><h1 style="font-size:1.6rem;margin-bottom:10px">This page could not load its content</h1><p style="color:#9b9ea8;max-width:46ch;margin:auto">The file <b>content.js</b> was not found next to this page. Upload content.js (and the images folder) to the same place as this page, then refresh.</p></div></div>';
   return;
 }
-const PREVIEW=window!==window.parent;
+/* true only inside the editor's own preview, not when another site frames this page */
+const PREVIEW=(()=>{if(window===window.parent)return false;try{return !!window.parent.document.getElementById('f')}catch(e){return false}})();
 const slug=s=>(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const count=(n,w)=>n+' '+(n===1?w:(/y$/.test(w)?w.slice(0,-1)+'ies':w+'s'));
 let io;const hashFns=[];
@@ -173,6 +177,10 @@ function renderLinks(S){
     h('p','lp-foot',S.footer)));
   page.addEventListener('pointermove',e=>{const b=page.getBoundingClientRect();page.style.setProperty('--mx',(e.clientX-b.left)+'px');page.style.setProperty('--my',(e.clientY-b.top)+'px')});
   app.append(page);
+  /* If a wrapper page frames this on a phone without phone settings, the layout is far wider than the screen
+     and everything looks tiny. Detect that and scale the content up so it fills the screen. */
+  const fit=()=>{const sw=screen.width||innerWidth,z=(window.matchMedia&&matchMedia('(pointer:coarse)').matches&&innerWidth>sw*1.4)?innerWidth/sw:1;page.style.setProperty('--z',z.toFixed(3))};
+  fit();addEventListener('resize',fit);
 }
 
 function render(S){

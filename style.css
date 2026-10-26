@@ -322,3 +322,10 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 
 .latest .ggrid.two{grid-template-columns:1fr}
 @media(min-width:700px){.latest .ggrid.two{grid-template-columns:1fr 1fr}}
+
+/* framed-on-phone fit (only active when --z > 1) */
+.lp-in{zoom:var(--z,1);width:min(calc(100% - (var(--z,1) - 1) * 4%),520px)}
+
+/* galleries: 2 per row */
+.ggrid{grid-template-columns:1fr}
+@media(min-width:700px){.ggrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
