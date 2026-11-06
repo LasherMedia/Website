@@ -27,6 +27,21 @@ button:hover{border-color:#ff2a3d}button.on{border-color:#ff2a3d;background:#2a0
 .vlist code{color:#ff8a94;font-size:13px}
 main{flex:1;display:flex;justify-content:center;padding:14px;overflow:auto}
 iframe{border:0;background:#000;border-radius:12px;width:100%;transition:width .25s}iframe.m{width:390px}
+/* cover chooser */
+.cp-bg{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.72);display:grid;place-items:center;padding:14px}
+.cp{background:#0d0f13;border:1px solid #2a2d36;border-radius:18px;width:min(940px,100%);max-height:94vh;display:flex;flex-direction:column;overflow:hidden}
+.cp-h{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #22252d}.cp-h h3{margin:0;font-size:16px}
+.cp-b{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;padding:16px 18px;overflow:auto}
+@media(max-width:760px){.cp-b{grid-template-columns:1fr}}
+.cp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:10px;max-height:46vh;overflow:auto}
+.cp-grid button{padding:0;border:2px solid transparent;border-radius:10px;overflow:hidden;aspect-ratio:1;background:#15171c}
+.cp-grid button.sel{border-color:#ff2a3d}.cp-grid img{width:100%;height:100%;object-fit:cover;display:block}
+.cp-pv{position:relative;aspect-ratio:16/10;border-radius:14px;overflow:hidden;background:#15171c;border:1px solid #2f333d;cursor:grab;touch-action:none}
+.cp-pv:active{cursor:grabbing}.cp-pv img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;user-select:none}
+.cp-pv.empty::after{content:"No cover yet";position:absolute;inset:0;display:grid;place-items:center;color:#9a9ea8}
+.cp-f{display:flex;gap:8px;justify-content:space-between;padding:12px 18px;border-top:1px solid #22252d}
+.cp-f button{white-space:nowrap}
+.cp-drop{margin-top:10px;border:1.5px dashed #3a3f4b;border-radius:12px;padding:26px;text-align:center;color:#9a9ea8;cursor:pointer}.cp-drop:hover{border-color:#ff2a3d}
 @media(max-width:860px){body{flex-direction:column}aside{width:100%;height:58vh}main{height:42vh}}
 </style></head><body>
 <aside>
@@ -41,6 +56,7 @@ iframe{border:0;background:#000;border-radius:12px;width:100%;transition:width .
 <main><iframe id="f" src="index.html" title="Preview"></iframe></main>
 <script src="content.js"></script>
 <script src="vault.js"></script>
+<script src="gsrc.js"></script>
 <script>
 const KEY='lm-draft-v3',$=id=>document.getElementById(id),f=$('f');
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -64,7 +80,7 @@ const SCHEMA=[
   ['projects.items','list','Project',[['category',CAT('projects.categories'),'Category'],['tag','text','Small label'],['title','text','Title'],['text','area','Description'],['image','image','Cover image'],['link','text','Link (optional)'],['linkLabel','text','Link text'],['embed','text','Instagram post link (shows the post right on the site)']]]]],
 ['Galleries',[['galleries.heading','text','Heading'],['galleries.text','area','Intro'],
   ['galleries.categories','list','Category',[['name','text','Name'],['text','text','Short line (optional)'],['image','image','Tile image (optional)']]],
-  ['galleries.items','list','Gallery',[['category',CAT('galleries.categories'),'Category'],['title','text','Title'],['label','text','Small text'],['url','text','Link to the photos'],['password','text','Password (optional). Leave empty for no password'],['image','image','Image (shows on the gallery card)'],['locked','bool','Photo-vault gallery: locked (advanced)'],['vault','text','Photo-vault gallery ID (filled in automatically)']]]]],
+  ['galleries.items','list','Gallery',[['category',CAT('galleries.categories'),'Category'],['title','text','Title'],['label','text','Small text'],['url','text','Link to the photos (if they live somewhere else)'],['source','sel:none=Not hosted on this site,drive=Google Drive folder,gcs=Google Cloud Storage','Show the photos on this site from'],['folder','text','Folder link (Drive) or bucket/folder (Cloud Storage)'],['allowDownload','bool','Let people download photos'],['password','text','Password (optional). Leave empty for no password'],['image','image','Image (shows on the gallery card)'],['locked','bool','Photo-vault gallery: locked (advanced)'],['vault','text','Photo-vault gallery ID (filled in automatically)']]]]],
 ['Link page (links.html)',[['links.tagline','text','Tagline'],['links.items','list','Link button',[['label','text','Button text'],['url','text','Link (leave empty on Email to use your contact email)'],['icon','choice:email,website,behance,tiktok,instagram,facebook,link','Icon']]]]],
 ['Contact & links',[['contact.heading','text','Heading'],['contact.text','area','Intro'],['contact.email','text','Email address'],['contact.types','lines','Project types in the form (one per line)'],['contact.socials','list','Social link',[['label','text','Name'],['url','text','Link']]]]],
 ['Colors',[['theme.accents.home','color','Home accent'],['theme.accents.projects','color','Projects accent'],['theme.accents.galleries','color','Galleries accent'],['theme.accents.contact','color','Contact accent'],['theme.bg','color','Background'],['theme.ink','color','Text']]],
@@ -80,24 +96,28 @@ function field(obj,key,type,label){
  if(type==='bool'){const l=E('label','chk'),i=E('input');i.type='checkbox';i.checked=!!v;i.onchange=()=>set(i.checked);l.append(i,document.createTextNode(label));return l}
  w.append(E('label','',label));
  if(type==='text'||type==='color'){const i=E('input');i.type=type;i.value=v||(type==='color'?'#ff2a3d':'');i.oninput=()=>set(i.value);w.append(i)}
+ else if(type.startsWith('sel:')){const s=E('select');type.slice(4).split(',').forEach(p=>{const q=p.split('='),o=E('option','',q[1]);o.value=q[0]==='none'?'':q[0];s.append(o)});s.value=v||'';s.onchange=()=>set(s.value);w.append(s)}
  else if(type.startsWith('choice:')){const s=E('select');type.slice(7).split(',').forEach(n=>{const o=E('option','',n);o.value=n;s.append(o)});s.value=v||'link';if(!v)set(s.value);s.onchange=()=>set(s.value);w.append(s)}
  else if(type.startsWith('select:')){const s=E('select'),p=type.slice(7);
   const fill=()=>{s.textContent='';const names=(get(p)||[]).map(c=>c.name);if(obj[key]&&!names.includes(obj[key]))names.push(obj[key]);if(!obj[key]&&names.length)set(names[0]);
    names.forEach(n=>{const o=E('option','',n);o.value=n;s.append(o)});s.value=obj[key]||''};
   fill();s.onfocus=fill;s.onchange=()=>set(s.value);w.append(s)}
- else if(type==='image'){const r=E('div','img'),th=E('img'),i=E('input');i.type='text';i.value=(v||'').startsWith('data:')?'(uploaded photo)':v||'';i.placeholder='images/photo.jpg or upload →';
-  if(v)th.src=v;else th.style.display='none';
-  i.oninput=()=>{set(i.value);th.src=i.value;th.style.display=i.value?'':'none'};
-  const b=E('button','','Upload'),fi=E('input');fi.type='file';fi.accept='image/*';fi.hidden=true;b.onclick=()=>fi.click();
-  fi.onchange=()=>fi.files[0]&&shrink(fi.files[0],key,d=>{set(d);th.src=d;th.style.display='';i.value='(uploaded photo)'});
-  r.append(th,i,b,fi);w.append(r)}
+ else if(type==='image'){const r=E('div','img'),th=E('img'),i=E('input'),pk=key+'Pos';
+  i.type='text';i.value=(v||'').startsWith('data:')?'(uploaded photo)':v||'';i.placeholder='images/photo.jpg, or choose \u2192';
+  th.style.objectFit='cover';
+  const showTh=()=>{const s=obj[key]||'';if(s){th.src=s;th.style.display='';th.style.objectPosition=obj[pk]||''}else th.style.display='none'};showTh();
+  i.oninput=()=>{set(i.value);showTh()};
+  const b=E('button','','Choose\u2026');
+  b.onclick=()=>coverPicker({src:obj[key]||'',pos:obj[pk]||'50% 50%',source:obj.source,folder:obj.folder,key,
+    onApply:(s,p)=>{obj[key]=s;obj[pk]=p;push();i.value=(s||'').startsWith('data:')?'(uploaded photo)':(s||'');showTh()}});
+  r.append(th,i,b);w.append(r)}
  else{const a=E('textarea');
   const to={area:x=>x||'',lines:x=>(x||[]).join('\n'),paras:x=>(x||[]).join('\n\n'),csv:x=>(x||[]).join(', ')}[type];
   const from={area:x=>x,lines:x=>x.split('\n').map(s=>s.trim()).filter(Boolean),paras:x=>x.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean),csv:x=>x.split(',').map(s=>s.trim()).filter(Boolean)}[type];
   a.value=to(v);a.oninput=()=>set(from(a.value));w.append(a)}
  return w}
 function build(){
- const root=$('form');root.textContent='';root.append(linkPanel(),quickPanel(),clientPanel());
+ const root=$('form');root.textContent='';root.append(linkPanel(),googlePanel(),quickPanel(),clientPanel());
  SCHEMA.forEach(([title,fields])=>{
   const d=E('details');d.append(E('summary','',title));
   fields.forEach(([path,type,label,sub])=>{
@@ -123,8 +143,10 @@ async function packSite(){
  const files={},copy=JSON.parse(JSON.stringify(S));
  for(const g of ((copy.galleries&&copy.galleries.items)||[])){
   const pw=(g.password||'').trim();
-  if(pw&&g.url){g.protectedUrl=await Vault.lockLink(g.url,pw);g.url=''}
-  else if(g.url&&!pw&&g.protectedUrl){delete g.protectedUrl}
+  const hasSrc=g.source&&g.folder;
+  if(pw&&hasSrc){g.protectedUrl=await Vault.lockLink('src:'+g.source+':'+g.folder,pw);g.source='';g.folder=''}
+  else if(pw&&g.url){g.protectedUrl=await Vault.lockLink(g.url,pw);g.url=''}
+  else if((g.url||hasSrc)&&!pw&&g.protectedUrl){delete g.protectedUrl}
   delete g.password}
  const walkIt=o=>{for(const k in o){const v=o[k];
   if(typeof v==='string'&&v.startsWith('data:image')){const m=/^data:image\/(\w+);base64,(.*)$/.exec(v);if(!m)continue;
@@ -155,25 +177,99 @@ function quickPanel(){
 /* ---------- Add a game gallery link (with image) ---------- */
 const slugA=s=>(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 let linkMsg='';
+/* ---------- Cover chooser: pick from the gallery's own photos or upload, then drag to set what stays in view ---------- */
+const bakeImg=url=>new Promise((res,rej)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>{try{const sc=Math.min(1,1800/Math.max(im.naturalWidth,im.naturalHeight)),c=E('canvas');c.width=Math.round(im.naturalWidth*sc);c.height=Math.round(im.naturalHeight*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.85))}catch(e){rej(e)}};im.onerror=rej;im.src=url});
+function coverPicker(o){
+ const cur={src:o.src||'',pos:o.pos||'50% 50%',remote:false};
+ const bg=E('div','cp-bg'),box=E('div','cp');
+ const close=()=>bg.remove();
+ const hd=E('div','cp-h'),x=E('button','','\u2715');x.onclick=close;hd.append(E('h3','','Choose a cover'),x);
+ const left=E('div'),right=E('div');
+ const tabs=E('div','row'),tg=E('button','on','From this gallery'),tu=E('button','','Upload a photo');tabs.append(tg,tu);
+ const pane=E('div');left.append(tabs,pane);
+ const pv=E('div','cp-pv'),pimg=E('img');pv.append(pimg);
+ right.append(E('label','','How it will look on the site'),pv,E('div','hint','Drag the picture to choose what stays in view.'));
+ const draw=()=>{if(cur.src){pimg.src=cur.src;pimg.style.display='';pv.classList.remove('empty')}else{pimg.style.display='none';pv.classList.add('empty')}pimg.style.objectPosition=cur.pos};
+ let drag=null;
+ pv.onpointerdown=e=>{if(!cur.src)return;pv.setPointerCapture(e.pointerId);const q=cur.pos.split(' ').map(parseFloat);drag={x:e.clientX,y:e.clientY,px:isNaN(q[0])?50:q[0],py:isNaN(q[1])?50:q[1]}};
+ pv.onpointermove=e=>{if(!drag)return;const b=pv.getBoundingClientRect(),nw=pimg.naturalWidth||1,nh=pimg.naturalHeight||1,sc=Math.max(b.width/nw,b.height/nh),ox=nw*sc-b.width,oy=nh*sc-b.height;
+  const nx=ox>1?Math.max(0,Math.min(100,drag.px-(e.clientX-drag.x)/ox*100)):drag.px,ny=oy>1?Math.max(0,Math.min(100,drag.py-(e.clientY-drag.y)/oy*100)):drag.py;
+  cur.pos=Math.round(nx)+'% '+Math.round(ny)+'%';pimg.style.objectPosition=cur.pos};
+ pv.onpointerup=pv.onpointercancel=()=>{drag=null};
+ const showGallery=async()=>{
+  tg.classList.add('on');tu.classList.remove('on');pane.textContent='';
+  if(!(o.source&&o.folder)){pane.append(E('p','hint','To pick from a gallery\u2019s own photos, set \u201CShow the photos on this site from\u201D and paste the folder link on this gallery first. You can still upload a photo.'));return}
+  const msg=E('p','hint','Loading photos\u2026');pane.append(msg);
+  try{
+   const L=await GSrc.list(o.source,o.folder,(S.google||{}).apiKey||'');
+   if(!L.length){msg.textContent='No photos found in that folder yet.';return}
+   msg.textContent=L.length+' photos. Click one to use it as the cover.';
+   const grid=E('div','cp-grid');
+   L.forEach(f=>{const b=E('button'),im=E('img');im.loading='lazy';im.src=f.thumb;if(f.thumbAlt)im.onerror=()=>{im.onerror=null;im.src=f.thumbAlt};b.append(im);
+    b.onclick=()=>{[...grid.children].forEach(c=>c.classList.remove('sel'));b.classList.add('sel');cur.src=f.thumb.replace('=w720','=w1400');cur.remote=true;cur.pos='50% 50%';draw()};grid.append(b)});
+   pane.append(grid);
+  }catch(e){msg.textContent=GSrc.message(e)+(e.detail?' ('+e.detail+')':'')}
+ };
+ const showUpload=()=>{
+  tu.classList.add('on');tg.classList.remove('on');pane.textContent='';
+  const fi=E('input');fi.type='file';fi.accept='image/*';fi.hidden=true;
+  const dz=E('div','cp-drop','Click to choose a photo, or drop one here');
+  const take=file=>file&&shrink(file,o.key||'image',d=>{cur.src=d;cur.remote=false;cur.pos='50% 50%';draw()});
+  dz.onclick=()=>fi.click();fi.onchange=()=>take(fi.files[0]);
+  dz.ondragover=e=>{e.preventDefault()};dz.ondrop=e=>{e.preventDefault();take(e.dataTransfer.files[0])};
+  pane.append(dz,fi);
+ };
+ tg.onclick=showGallery;tu.onclick=showUpload;
+ const ft=E('div','cp-f'),rm=E('button','','Remove cover'),cancel=E('button','','Cancel'),use=E('button','go','Use this cover');use.style.width='auto';use.style.padding='9px 18px';
+ rm.onclick=()=>{o.onApply('','');close()};cancel.onclick=close;
+ use.onclick=async()=>{use.disabled=true;use.textContent='Saving\u2026';let s=cur.src;
+  if(cur.remote&&/^https?:/.test(s)){try{s=await bakeImg(s)}catch(e){}}
+  o.onApply(s,cur.pos);close()};
+ const fr=E('div','row');fr.append(cancel,use);ft.append(rm,fr);
+ const bd=E('div','cp-b');bd.append(left,right);box.append(hd,bd,ft);bg.append(box);bg.onclick=e=>{if(e.target===bg)close()};document.body.append(bg);
+ draw();(o.source&&o.folder)?showGallery():showUpload();
+}
+
+/* ---------- Google connection ---------- */
+function googlePanel(){
+ const d=E('details');d.append(E('summary','','Google connection (for Drive photos)'));
+ const ol=E('ol');ol.style.cssText='margin:6px 0 10px 18px;padding:0;color:#b9bdc7;font-size:12.5px';
+ ['Go to console.cloud.google.com, make a project, and turn on the \u201CGoogle Drive API\u201D.','Credentials \u2192 Create credentials \u2192 API key. Under restrictions, allow only your website addresses (for example lashermedia.com/*) and only the Drive API.','Paste the key below.','In Google Drive, make a folder per shoot, set it to \u201CAnyone with the link\u201D (viewer), and paste its link on the gallery card.'].forEach(t=>ol.append(E('li','',t)));
+ d.append(ol);
+ const key=E('input');key.type='text';key.placeholder='Paste your Google API key';key.value=(S.google&&S.google.apiKey)||'';
+ key.oninput=()=>{(S.google=S.google||{}).apiKey=key.value.trim();push()};
+ const test=E('input');test.type='text';test.placeholder='Paste a Drive folder link to test';
+ const go=E('button','','Test'),out=E('div','hint');out.style.marginTop='6px';
+ go.onclick=async()=>{out.textContent='Checking\u2026';try{const L=await GSrc.list('drive',test.value,key.value.trim());out.textContent='Connected. Found '+L.length+' photos in that folder.'}catch(e){out.textContent=GSrc.message(e)+(e.detail?' ('+e.detail+')':'')}};
+ const row=E('div','row');row.append(test,go);test.style.flex='3';
+ d.append(E('label','','Google API key'),key,E('label','','Test a folder'),row,out);return d}
+
+/* ---------- Add a gallery (photos on this site from Google, or a link) ---------- */
 function linkPanel(){
- const d=E('details');d.open=true;d.append(E('summary','','Add a game gallery link (with image)'));
- d.append(E('p','hint','Paste the link to your photos (Drive, Pixieset, etc.), add a picture, and it appears as a card inside the category you pick on your Galleries page. Add a password if you want visitors to enter it first. Then post your site link so people can find it.'));
+ const d=E('details');d.open=true;d.append(E('summary','','Add a gallery (Google folder or link)'));
+ d.append(E('p','hint','Pick where the photos live. A Google Drive folder shows the photos right on your site; any other link opens that link. Add a password if visitors should enter it first.'));
  const name=E('input');name.type='text';name.placeholder='e.g. Gaels vs Carabins, Oct 18';
- const url=E('input');url.type='text';url.placeholder='https://...';
+ const mode=E('select');[['link','A link to photos elsewhere'],['drive','Google Drive folder (shown on this site)'],['gcs','Google Cloud Storage folder (shown on this site)']].forEach(([v,l])=>{const o=E('option','',l);o.value=v;mode.append(o)});
+ const url=E('input');url.type='text';const ulab=E('label','','Link to the photos');
+ const setLab=()=>{ulab.textContent=mode.value==='link'?'Link to the photos':mode.value==='drive'?'Drive folder link':'Bucket/folder, e.g. my-bucket/oct-18';url.placeholder=mode.value==='link'?'https://...':mode.value==='drive'?'https://drive.google.com/drive/folders/...':'my-bucket/folder'};setLab();mode.onchange=setLab;
  const small=E('input');small.type='text';small.placeholder='View photos';
  const gpw=E('input');gpw.type='text';gpw.placeholder='Leave empty for no password';
+ const dc=E('input');dc.type='checkbox';const dl=E('label','chk');dl.append(dc,document.createTextNode('Let people download photos'));
  const cat=E('select'),fill=()=>{cat.textContent='';((S.galleries&&S.galleries.categories)||[]).forEach(c=>{const o=E('option','',c.name);o.value=c.name;cat.append(o)})};fill();cat.onfocus=fill;
- const fi=E('input');fi.type='file';fi.accept='image/*';fi.hidden=true;const fb=E('button','','Choose image'),fc=E('span','hint',' none chosen');
- fb.onclick=()=>fi.click();fi.onchange=()=>fc.textContent=' '+(fi.files[0]?fi.files[0].name:'none chosen');
- const go=E('button','go','Add to Galleries'),st=E('div','hint');st.style.marginTop='8px';st.textContent=linkMsg;
- go.onclick=async()=>{
-  if(!name.value.trim()||!/^https?:\/\//.test(url.value.trim())){st.textContent='Add a name and a link that starts with https://';return}
-  go.disabled=true;
-  const img=fi.files[0]?await shrinkP(fi.files[0]):'';
+ const chosen={src:'',pos:'50% 50%'};const cb=E('button','','Choose cover\u2026'),cs=E('span','hint',' none yet');
+ cb.onclick=()=>coverPicker({src:chosen.src,pos:chosen.pos,source:mode.value==='link'?'':mode.value,folder:mode.value==='link'?'':url.value,key:'image',onApply:(s,p)=>{chosen.src=s;chosen.pos=p;cs.textContent=s?' chosen':' none yet'}});
+ const go=E('button','go','Add gallery'),st=E('div','hint');st.style.marginTop='8px';st.textContent=linkMsg;
+ go.onclick=()=>{
+  const v=url.value.trim();
+  if(!name.value.trim()||!v){st.textContent='Add a name and the link or folder.';return}
+  if(mode.value==='link'&&!/^https?:\/\//.test(v)){st.textContent='The link should start with https://';return}
+  if(mode.value==='drive'&&!GSrc.driveId(v)){st.textContent='That doesn\u2019t look like a Google Drive folder link.';return}
   (S.galleries=S.galleries||{}).items=S.galleries.items||[];
-  S.galleries.items.unshift({category:cat.value||'',title:name.value.trim(),label:small.value.trim(),url:url.value.trim(),password:gpw.value.trim(),image:img,vault:'',locked:false});
+  S.galleries.items.unshift({category:cat.value||'',title:name.value.trim(),label:small.value.trim(),
+   url:mode.value==='link'?v:'',source:mode.value==='link'?'':mode.value,folder:mode.value==='link'?'':v,allowDownload:dc.checked,
+   password:gpw.value.trim(),image:chosen.src,imagePos:chosen.pos,vault:'',locked:false});
   push();linkMsg='Added to '+(cat.value||'Galleries')+'. Direct link to it: yourwebsite/galleries#'+slugA(name.value)+'  Now click "Download update (zip)" and upload it.';build()};
- d.append(E('label','','Game or gallery name'),name,E('label','','Link to the photos'),url,E('label','','Small text on the card (optional)'),small,E('label','','Password (optional)'),gpw,E('label','','Category'),cat,E('label','','Image'),fb,fc,fi,E('div','',''),go,st);
+ d.append(E('label','','Gallery name'),name,E('label','','Where are the photos?'),mode,ulab,url,E('label','','Small text on the card (optional)'),small,E('label','','Password (optional)'),gpw,dl,E('label','','Category'),cat,E('label','','Cover image'),cb,cs,E('div','',''),go,st);
  return d}
 
 /* ---------- Add a gallery (locked or unlocked) ---------- */

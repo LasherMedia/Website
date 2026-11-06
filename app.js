@@ -1,7 +1,7 @@
 (function(){
 const h=(t,c,...k)=>{const e=document.createElement(t);if(c)e.className=c;k.flat().forEach(x=>x!=null&&x!==false&&e.append(x));return e};
 const A=(href,c,...k)=>{const a=h('a',c,...k);a.href=href||'#';if(/^https?:/.test(href||'')){a.target='_blank';a.rel='noopener'}return a};
-const img=(src,alt,c,eager)=>{const i=h('img',c);i.src=src;i.alt=alt||'';if(!eager)i.loading='lazy';return i};
+const img=(src,alt,c,eager,pos)=>{const i=h('img',c);i.src=src;i.alt=alt||'';if(!eager)i.loading='lazy';if(pos)i.style.objectPosition=pos;return i};
 const HOST=location.hostname.toLowerCase();
 /* socials.lashermedia.com (or links./link./bio.) opens the link page at its root, so no /links needed */
 const AS_LINKS=document.body.dataset.page==='home'&&/^(socials|links|link|bio)\./.test(HOST)&&location.pathname.replace(/index\.html$/,'').replace(/\/+$/,'')==='';
@@ -32,7 +32,7 @@ function explorer(cats,items,mk,noun,gridCls,top){
   const root=h('div','explorer'),tiles=h('div','cats'),view=h('div','catview');
   const by=c=>items.filter(i=>i.category===c.name);
   cats.forEach(c=>{
-    tiles.append(A('#'+slug(c.name),'cat reveal',c.image?img(c.image,'','cbg'):h('i','cbg gen'),h('i','cshade'),
+    tiles.append(A('#'+slug(c.name),'cat reveal',c.image?img(c.image,'','cbg',false,c.imagePos):h('i','cbg gen'),h('i','cshade'),
       h('div','cin',h('span','cn',count(by(c).length,noun)),h('b','',c.name),c.text?h('small','',c.text):null),h('span','arr','→')));
   });
   function sync(first){
@@ -59,51 +59,59 @@ const mkProject=B=>p=>{
   if(src){const f=h('iframe','igframe');f.src=src;f.loading='lazy';f.title=p.title||'Instagram post';f.setAttribute('scrolling','no');f.setAttribute('frameborder','0');
     return h('article','pcard ig',f,h('div','pb',p.title?h('h3','',p.title):null,p.text?h('p','',p.text):null,A(p.embed,'more','View on Instagram →')))}
   return h('article','pcard',
-    p.image?img(p.image,p.title,'pm'):h('div','pm cover',img(B.logo,'','cl',true)),
+    p.image?img(p.image,p.title,'pm',false,p.imagePos):h('div','pm cover',img(B.logo,'','cl',true)),
     h('div','pb',p.tag?h('span','tag',p.tag):null,h('h3','',p.title),h('p','',p.text),p.link?A(p.link,'more',(p.linkLabel||'View project')+' →'):null));
 };
+const isSrc=g=>!!(g.source&&g.folder);
 const isLocked=g=>!!((g.vault&&g.locked)||g.protectedUrl||(PREVIEW&&g.password));
 const mkGallery=B=>g=>{
   const locked=isLocked(g);
-  const c=A(g.url||'#','gcard',g.image?img(g.image,g.title,'gimg'):h('div','gimg gen',img(B.logo,'','gcl',true)),h('i','gshade'),
+  const c=A(g.url||'#','gcard',g.image?img(g.image,g.title,'gimg',false,g.imagePos):h('div','gimg gen',img(B.logo,'','gcl',true)),h('i','gshade'),
     h('div','gin',h('span','gl',locked?h('i','lk'):null,g.label||(locked?'Password protected':(g.vault?'View gallery':'View photos'))),h('b','',g.title)),h('span','arr','→'));
   c.dataset.slug=slug(g.title);
-  if(g.vault||locked)c.onclick=e=>{e.preventDefault();locked?ask(g,B):openPublic(g)};
+  if(g.vault||locked||isSrc(g))c.onclick=e=>{e.preventDefault();locked?ask(g,B):(isSrc(g)?openSource(g):openPublic(g))};
   return c};
 
 /* password-protected gallery viewer */
-function viewer(v){
-  const ov=h('div','vault'),grid=h('div','vgrid'),status=h('small','',''),urls=[],items=[];
+function viewer(src,title,kicker){
+  const ov=h('div','vault'),grid=h('div','vgrid'),status=h('small','st',''),h2=h('h2','',title||''),urls=[],items=[];let allow=false;
   const close=h('button','btn','Close');
-  const done=()=>{ov.remove();document.body.classList.remove('lock');removeEventListener('keydown',key);urls.forEach(u=>URL.revokeObjectURL(u))};
+  const done=()=>{ov.remove();document.body.classList.remove('lock');removeEventListener('keydown',key);urls.forEach(u=>{if(String(u).startsWith('blob:'))URL.revokeObjectURL(u)})};
   close.onclick=done;
   const key=e=>{if(e.key==='Escape')done()};addEventListener('keydown',key);
-  ov.append(h('div','vhead',h('div','',h('small','','Private gallery'),h('h2','',v.title),status),close),grid);
-  ov.addEventListener('contextmenu',e=>e.preventDefault());
-  document.body.append(ov);document.body.classList.add('lock');
+  ov.append(h('div','vhead',h('div','',h('small','kick',kicker||'Gallery'),h2,status),close),grid);
+  ov.addEventListener('contextmenu',e=>{if(!allow)e.preventDefault()});
+  document.body.append(ov);document.body.classList.add('lock');status.textContent='Loading…';
+  const fb=(im,alt)=>{if(alt)im.onerror=()=>{im.onerror=null;im.src=alt}};
   function light(i){
-    const lb=h('div','light'),im=h('img');im.draggable=false;
-    const set=n=>{i=(n+items.length)%items.length;im.src=items[i].url};set(i);
-    const prev=h('button','lnav l','‹'),next=h('button','lnav r','›'),x=h('button','lx','✕');
-    prev.onclick=e=>{e.stopPropagation();set(i-1)};next.onclick=e=>{e.stopPropagation();set(i+1)};
-    const closeLb=()=>{lb.remove();removeEventListener('keydown',lk)};x.onclick=closeLb;lb.onclick=e=>{if(e.target===lb)closeLb()};
-    const lk=e=>{if(e.key==='Escape'){e.stopImmediatePropagation();closeLb()}if(e.key==='ArrowLeft')set(i-1);if(e.key==='ArrowRight')set(i+1)};addEventListener('keydown',lk,true);
-    lb.append(im,prev,next,x);
-    if(v.allowDownload){const d=A('#','btn primary dl','Download');d.onclick=e=>{e.preventDefault();e.stopPropagation();const a=h('a');a.href=items[i].url;a.download=items[i].name;a.click()};lb.append(d)}
+    const lb=h('div','light'),im=h('img'),f0=()=>items[i];im.draggable=false;
+    const set=n=>{i=(n+items.length)%items.length;const f=items[i];fb(im,f.fullAlt);im.src=f.full||f.url};set(i);
+    const prev=h('button','lnav l','‹'),next=h('button','lnav r','›'),x=h('button','lx','✕'),pg=h('span','lcount','');
+    const upd=()=>pg.textContent=(i+1)+' / '+items.length;upd();
+    prev.onclick=e=>{e.stopPropagation();set(i-1);upd()};next.onclick=e=>{e.stopPropagation();set(i+1);upd()};
+    const closeLb=()=>{lb.remove();removeEventListener('keydown',lk,true)};x.onclick=closeLb;lb.onclick=e=>{if(e.target===lb)closeLb()};
+    const lk=e=>{if(e.key==='Escape'){e.stopImmediatePropagation();closeLb()}if(e.key==='ArrowLeft'){set(i-1);upd()}if(e.key==='ArrowRight'){set(i+1);upd()}};addEventListener('keydown',lk,true);
+    lb.append(im,prev,next,x,pg);
+    if(allow){const d=A('#','btn primary dl','Download');d.onclick=e=>{e.preventDefault();e.stopPropagation();const f=f0();
+      if(f.download&&!String(f.url).startsWith('blob:'))window.open(f.download,'_blank','noopener');else{const a=h('a');a.href=f.url;a.download=f.name;a.click()}};lb.append(d)}
     ov.append(lb);
   }
-  (async()=>{
+  Promise.resolve(src).then(async v=>{
+    if(v.title)h2.textContent=v.title;allow=!!v.allowDownload;
+    if(!v.count){status.textContent='';grid.replaceWith(h('p','vmsg','No photos in this gallery yet. Check back soon.'));return}
     for(let i=0;i<v.count;i++){
-      status.textContent='Loading '+(i+1)+' of '+v.count+'…';
+      if(v.count>6||!i)status.textContent='Loading '+(i+1)+' of '+v.count+'…';
       try{const f=await v.load(i);urls.push(f.url);items.push(f);
-        const im=h('img');im.src=f.url;im.alt=f.name;im.draggable=false;const n=items.length-1;im.onclick=()=>light(n);grid.append(h('div','vi',im))}catch(e){}
+        const im=h('img');im.alt=f.name;im.draggable=false;im.loading='lazy';fb(im,f.thumbAlt);im.src=f.thumb||f.url;const n=items.length-1;im.onclick=()=>light(n);grid.append(h('div','vi',im))}catch(e){}
     }
     status.textContent=count(items.length,'photo');
-  })();
+  }).catch(e=>{status.textContent='';grid.replaceWith(h('p','vmsg',window.GSrc?GSrc.message(e):'The photos couldn\u2019t be loaded right now.'))});
 }
-async function openPublic(g){
-  try{viewer(await Vault.openPublic(g.vault))}catch(e){alert('Sorry, this gallery could not be loaded.')}
+function openSource(g){
+  const key=((window.SITE||{}).google||{}).apiKey||'';
+  viewer(GSrc.list(g.source,g.folder,key).then(L=>({title:g.title,allowDownload:!!g.allowDownload,count:L.length,load:async i=>Object.assign({url:L[i].thumb},L[i])})),g.title,'Gallery');
 }
+async function openPublic(g){viewer(Vault.openPublic(g.vault),g.title,'Gallery')}
 function ask(g,B){
   const bg=h('div','pop-bg'),card=h('div','pop'),input=h('input');
   input.type='password';input.placeholder='Enter password';input.autocomplete='off';input.spellcheck=false;input.autocapitalize='off';input.setAttribute('aria-label','Gallery password');
@@ -124,13 +132,14 @@ function ask(g,B){
     try{
       if(g.vault){
         if(!window.Vault||!(window.crypto&&crypto.subtle))throw new Error('nosec');
-        const v=await Vault.open(g.vault,pw);close();viewer(v);
+        const v=await Vault.open(g.vault,pw);close();viewer(v,v.title,'Private gallery');
       }else if(g.protectedUrl){
         if(!window.Vault||!(window.crypto&&crypto.subtle))throw new Error('nosec');
-        unlocked(await Vault.unlockLink(g.protectedUrl,pw));
+        const u=await Vault.unlockLink(g.protectedUrl,pw),m=/^src:(drive|gcs):([\s\S]*)$/.exec(u);
+        if(m){close();openSource({title:g.title,source:m[1],folder:m[2],allowDownload:g.allowDownload})}else unlocked(u);
       }else{
         if(String(pw).toLowerCase()!==String(g.password).trim().toLowerCase())throw new Error('bad');
-        unlocked(g.url||'#');
+        if(g.source&&g.folder){close();openSource(g)}else unlocked(g.url||'#');
       }
     }catch(err){
       msg.textContent=err.message==='nosec'?'Protected galleries need a secure (https) connection.':err.message==='missing'?'This gallery is not available right now.':'That password isn\'t right. Try again.';
@@ -206,7 +215,7 @@ function render(S){
     const hero=h('section','hero');hero.id='top';
     hero.append(h('div','hero-bg',h('i','blob b1'),h('i','blob b2'),h('i','lines')));
     if(H.video){const v=h('video','hero-video');v.src=H.video;v.muted=true;v.loop=true;v.autoplay=true;v.playsInline=true;v.setAttribute('muted','');v.play&&v.play().catch(()=>{});hero.append(v,h('i','veil'))}
-    if(H.image)hero.append(img(H.image,'','hero-photo',true),h('i','veil'));
+    if(H.image)hero.append(img(H.image,'','hero-photo',true,H.imagePos),h('i','veil'));
     hero.append(h('div','wrap hero-in',
       h('div','hero-copy',h('h1','',headline(H.headline,H.accent)),h('p','lead reveal',H.sub),
         h('div','actions reveal',A('projects.html','btn primary',H.primary),A('contact.html','btn',H.secondary))),
@@ -220,7 +229,7 @@ function render(S){
 
   /* home sections */
   const as=h('section','');as.id='about';
-  as.append(h('div','wrap about',Ab.photo?h('div','portrait reveal',img(Ab.photo,'Portrait')):h('div','portrait reveal ph',img(B.logo,'','pl',true)),
+  as.append(h('div','wrap about',Ab.photo?h('div','portrait reveal',img(Ab.photo,'Portrait',null,false,Ab.photoPos)):h('div','portrait reveal ph',img(B.logo,'','pl',true)),
     h('div','reveal',h('span','num','About'),h('h2','',Ab.heading),(Ab.paragraphs||[]).map(t=>h('p','',t)),h('ul','skills',(Ab.skills||[]).map(s=>h('li','',s))))));
   secs.about=as;
   const Sv=Hm.services||{items:[]},sv=h('section','alt');sv.id='services';
@@ -250,7 +259,7 @@ function render(S){
   gs.append(h('div','wrap',head('Galleries',G.heading,G.text),explorer(gc,gItems,mkGallery(B),'gallery','ggrid',latest)));secs.galleries=gs;
   if(PAGE==='galleries'&&!PREVIEW){
     const go=()=>{const s=decodeURIComponent((location.hash||'').slice(1)),g=gItems.find(x=>slug(x.title)===s);if(!g)return;
-      if(g.vault||isLocked(g)){isLocked(g)?ask(g,B):openPublic(g)}
+      if(g.vault||isLocked(g)||isSrc(g)){isLocked(g)?ask(g,B):(isSrc(g)?openSource(g):openPublic(g))}
       else{if(g.category&&decodeURIComponent(location.hash.slice(1))!==slug(g.category))location.hash='#'+slug(g.category);
         setTimeout(()=>{const el=[...document.querySelectorAll('[data-slug="'+s+'"]')].find(e=>e.offsetParent);if(el){el.scrollIntoView({block:'center',behavior:'smooth'});el.classList.add('flash')}},250)}};
     hashFns.push(go);setTimeout(go,350);

@@ -329,3 +329,14 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 /* galleries: 2 per row */
 .ggrid{grid-template-columns:1fr}
 @media(min-width:700px){.ggrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* photo viewer polish */
+.vhead small.kick{color:var(--red);font-weight:600}.vhead small.st{display:block;color:var(--muted);font-weight:500;margin-top:2px}
+.vmsg{max-width:46ch;margin:70px auto;text-align:center;color:var(--muted);line-height:1.6}
+.vi{background:linear-gradient(110deg,#0f1218 30%,#181c26 50%,#0f1218 70%);background-size:220% 100%;animation:shimmer 1.5s linear infinite}
+.vi img{min-height:90px;display:block}
+@keyframes shimmer{to{background-position:-220% 0}}
+.lcount{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:.85rem;color:var(--muted);background:rgba(0,0,0,.45);padding:5px 12px;border-radius:999px}
+@media(max-width:600px){.vgrid{columns:2 140px;gap:10px}.vi{margin-bottom:10px}}
+
+.lcount{bottom:auto;top:24px}
